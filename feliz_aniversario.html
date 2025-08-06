@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feliz Aniversario 💖</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #e0f7fa, #ffe0f0);
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      text-align: center;
+      position: relative;
+    }
+
+    .container {
+      margin-top: 40px;
+      z-index: 2;
+      width: 90vw;
+      max-width: 400px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 16px;
+      box-shadow: 0 6px 30px 0 rgba(0,0,0,0.10);
+      padding: 18px 10px 24px 10px;
+      position: relative;
+    }
+
+    .anniv-img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      border: 3px solid #e0f7fa;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+      background: #fff;
+    }
+
+    h1 {
+      font-size: 1.5em;
+      margin: 8px 6px 16px 6px;
+      animation: fadeIn 2s ease-in-out forwards;
+    }
+
+    #typedText {
+      font-size: 1.09em;
+      margin: 14px 0;
+      border-right: 2px solid pink;
+      white-space: normal;
+      overflow: hidden;
+      max-width: 98%;
+      min-height: 38px;
+      animation: typewriter 3.3s steps(52) 0.4s forwards;
+      z-index: 2;
+      background: transparent;
+    }
+
+    .final-message {
+      font-size: 1.12em;
+      opacity: 0;
+      animation: fadeIn 2s ease-in-out 4s forwards;
+      margin-top: 10px;
+      z-index: 2;
+    }
+
+    .audio-btn {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 8px 20px;
+      background: linear-gradient(90deg, #64b5f6 40%, #e1bee7 100%);
+      color: #333;
+      border: none;
+      border-radius: 40px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
+      transition: background 0.3s;
+    }
+    .audio-btn:active { background: #e1bee7; }
+
+    .hearts-zone {
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .heart {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: pink;
+      transform: rotate(45deg);
+      opacity: 0.75;
+      animation: floatHeart 7s linear infinite;
+    }
+    .heart::before, .heart::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: pink;
+      border-radius: 50%;
+    }
+    .heart::before { top: -9px; left: 0; }
+    .heart::after { left: -9px; top: 0; }
+
+    @keyframes floatHeart {
+      0% {
+        bottom: -25px;
+        opacity: 0.2;
+        transform: translateX(0) scale(0.9) rotate(45deg);
+      }
+      15% { opacity: 0.7; }
+      50% {
+        opacity: 1;
+        transform: translateX(-15px) scale(1.06) rotate(45deg);
+      }
+      100% {
+        bottom: 105vh;
+        opacity: 0.1;
+        transform: translateX(20px) scale(1.17) rotate(45deg);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes typewriter {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts-zone"></div>
+  <div class="container">
+    <!-- Imagen circular de Imgur -->
+    <img src="https://i.imgur.com/bA93yAp.jpg" alt="Aniversario" class="anniv-img">
+    <h1>💖 3 años contigo 💖</h1>
+    <p id="typedText">Gracias por estos años de amor, paciencia y magia.<br>Siempre serás mi orgullo.</p>
+    <div class="final-message">Siempre contigo, en cada sueño. <span style="font-size:1.4em;">🎓✨</span></div>
+    <!-- Audio: aquí el bloque actualizado -->
+    <button class="audio-btn" onclick="playAudio()">💌 Escuchar mi mensaje</button>
+    <audio id="mensajeAudio" src="https://media.vocaroo.com/mp3/12YoahLLjc4O"></audio>
+  </div>
+
+  <script>
+    // Corazones animados flotantes
+    const heartsZone = document.querySelector('.hearts-zone');
+    for (let i = 0; i < 16; i++) {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.style.left = Math.random() * 96 + 'vw';
+      heart.style.animationDuration = (6.2 + Math.random() * 3) + 's';
+      heart.style.animationDelay = (Math.random() * 6) + 's';
+      heartsZone.appendChild(heart);
+    }
+
+    // Reproduce el audio
+    function playAudio() {
+      const audio = document.getElementById('mensajeAudio');
+      audio.play();
+    }
+  </script>
+</body>
+</html>
