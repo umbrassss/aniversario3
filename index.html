@@ -33,9 +33,18 @@
     .btn-outline{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--text)}
     .badge{display:inline-block;padding:2px 8px;font-size:12px;border-radius:999px;background:rgba(96,165,250,.18);border:1px solid rgba(96,165,250,.35);color:#dbeafe}
 
+    /* ===== Bienvenida como desplegable (sin JS) ===== */
+    #started{position:absolute;opacity:0;pointer-events:none}
+    .app{display:none}
+    /* Mostrar app y ocultar intro cuando está checkeado */
+    #started:checked ~ .app{display:block}
+    #started:checked ~ .intro{display:none}
+
+    /* Barra inferior del carrito */
     .fab-cart{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px env(safe-area-inset-right) calc(14px + env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(180deg,rgba(16,24,20,.6),rgba(16,24,20,.9));border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px)}
     .fab-cart button{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#22c55e,#16a34a)}
 
+    /* Sheet del carrito */
     .sheet{position:fixed;inset:0;z-index:40;display:none}
     .sheet.open{display:block}
     .sheet .overlay{position:absolute;inset:0;background:rgba(0,0,0,.45)}
@@ -55,13 +64,12 @@
     .btn-whatsapp{background:linear-gradient(180deg,#22c55e,#16a34a);display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:center}
     .muted.center{text-align:center}
 
-    /* Intro (pantalla de bienvenida) */
-    .intro{position:fixed;inset:0;z-index:60;display:grid;place-items:center;text-align:center;padding:20px;background:radial-gradient(1200px 800px at 50% 0%, rgba(96,165,250,.12), transparent 35%), linear-gradient(180deg,#0d1014,#10141b);transition:opacity .28s ease, transform .28s ease}
-    .intro.hide{opacity:0;transform:scale(.98);pointer-events:none}
+    /* Intro (overlay) */
+    .intro{position:fixed;inset:0;z-index:35;display:grid;place-items:center;text-align:center;padding:20px;background:radial-gradient(1200px 800px at 50% 0%, rgba(96,165,250,.12), transparent 35%), linear-gradient(180deg,#0d1014,#10141b)}
     .intro .box{width:min(520px,92vw);padding:18px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
     .intro h1{margin:4px 0 2px 0;font-size:22px}
     .intro p{margin:0;color:var(--muted)}
-    .btn-main{margin-top:12px;background:linear-gradient(180deg,#22c55e,#16a34a);padding:12px 18px;border-radius:14px;font-weight:800}
+    .btn-main{margin-top:12px;background:linear-gradient(180deg,#22c55e,#16a34a);padding:12px 18px;border-radius:14px;font-weight:800;display:inline-block}
     .emoji-cloud{position:absolute;inset:0;pointer-events:none;overflow:hidden}
     .emoji{position:absolute;font-size:34px;opacity:.9;animation:floatY 6s ease-in-out infinite alternate}
     .e1{top:14%;left:12%;animation-duration:7s}
@@ -76,8 +84,11 @@
   </style>
 </head>
 <body>
-  <!-- Intro Bienvenida -->
-  <div id="intro" class="intro">
+  <!-- Toggle sin JS: al marcar #started se oculta la intro y aparece la app -->
+  <input id="started" type="checkbox" />
+
+  <!-- Overlay de bienvenida (mismo documento) -->
+  <div class="intro">
     <div class="emoji-cloud" aria-hidden="true">
       <span class="emoji e1">🍪</span>
       <span class="emoji e2">🍪</span>
@@ -92,74 +103,77 @@
       <div style="font-weight:800;letter-spacing:.3px">¡Bienvenid@!</div>
       <h1>Preordena tus rolls y galletas</h1>
       <p>Haz tu pedido ahora y finaliza por WhatsApp</p>
-      <button id="startBtn" class="btn-main" onclick="startApp()">PRE-ORDENA</button>
+      <label for="started" class="btn-main">PRE-ORDENA</label>
     </div>
   </div>
 
-  <header>
-    <div class="head">
-      <div>
-        <div class="brand">Preorden — Feria</div>
-        <div class="sub">Paso 1: elige tus productos</div>
+  <!-- App principal -->
+  <div class="app">
+    <header>
+      <div class="head">
+        <div>
+          <div class="brand">Preorden — Feria</div>
+          <div class="sub">Paso 1: elige tus productos</div>
+        </div>
+        <span id="cartCount" class="badge">0</span>
       </div>
-      <span id="cartCount" class="badge">0</span>
+    </header>
+
+    <div class="wrap">
+      <section class="card products">
+        <div class="title">Menú</div>
+        <div id="products" class="products-grid"></div>
+      </section>
     </div>
-  </header>
 
-  <div class="wrap">
-    <section class="card products">
-      <div class="title">Menú</div>
-      <div id="products" class="products-grid"></div>
-    </section>
-  </div>
+    <div id="fabCart" class="fab-cart" hidden>
+      <button id="openSheet"><strong>Ver pedido</strong> (<span id="fabCount">0</span>) • <span id="fabTotal">$0.00</span></button>
+    </div>
 
-  <div id="fabCart" class="fab-cart" hidden>
-    <button id="openSheet"><strong>Ver pedido</strong> (<span id="fabCount">0</span>) • <span id="fabTotal">$0.00</span></button>
-  </div>
-
-  <div id="sheet" class="sheet" aria-hidden="true" role="dialog" aria-labelledby="sheetTitle">
-    <div class="overlay" id="closeSheet"></div>
-    <div class="panel">
-      <div class="handle"></div>
-      <div class="content">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
-          <div>
-            <div id="sheetTitle" style="font-weight:800;">Tu pedido</div>
-            <div class="sub">Paso 2: revisa y envía por WhatsApp</div>
-          </div>
-          <button id="closeSheetBtn" class="btn-outline">Cerrar</button>
-        </div>
-
-        <div id="sheetEmpty" class="muted center" style="padding:10px;border:1px dashed rgba(255,255,255,.12);border-radius:12px;">Aún no has agregado productos.</div>
-        <div id="sheetList" style="display:none;display:grid;gap:10px;"></div>
-
-        <div id="sheetForms" style="display:none;margin-top:10px;" class="card">
-          <div style="padding:12px;display:grid;gap:8px;">
-            <label for="customerName" style="font-weight:700;">Nombre del cliente</label>
-            <input id="customerName" type="text" placeholder="Tu nombre" />
-            <div class="sub">Lo incluiremos en el mensaje de WhatsApp.</div>
-            <label style="font-weight:700;">Entrega</label>
-            <div class="row" role="radiogroup" aria-label="Método de entrega" style="flex-wrap:wrap;gap:10px;">
-              <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Recoger en stand" checked>Recoger en stand</label>
-              <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Delivery (coordinar)">Delivery (coordinar)</label>
+    <div id="sheet" class="sheet" aria-hidden="true" role="dialog" aria-labelledby="sheetTitle">
+      <div class="overlay" id="closeSheet"></div>
+      <div class="panel">
+        <div class="handle"></div>
+        <div class="content">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <div>
+              <div id="sheetTitle" style="font-weight:800;">Tu pedido</div>
+              <div class="sub">Paso 2: revisa y envía por WhatsApp</div>
             </div>
-            <label for="notes" style="font-weight:700;">Notas</label>
-            <textarea id="notes" rows="3" placeholder="Sin cebolla, extra salsa, etc."></textarea>
+            <button id="closeSheetBtn" class="btn-outline">Cerrar</button>
           </div>
-        </div>
 
-        <div class="card" style="margin-top:10px;">
-          <div class="content" style="padding-top:8px;">
-            <div class="totals">
-              <div class="line"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
-              <div class="line"><span>Descuentos</span><span id="discounts">$0.00</span></div>
-              <div class="line total"><span>Total</span><span id="total">$0.00</span></div>
+          <div id="sheetEmpty" class="muted center" style="padding:10px;border:1px dashed rgba(255,255,255,.12);border-radius:12px;">Aún no has agregado productos.</div>
+          <div id="sheetList" style="display:none;display:grid;gap:10px;"></div>
+
+          <div id="sheetForms" style="display:none;margin-top:10px;" class="card">
+            <div style="padding:12px;display:grid;gap:8px;">
+              <label for="customerName" style="font-weight:700;">Nombre del cliente</label>
+              <input id="customerName" type="text" placeholder="Tu nombre" />
+              <div class="sub">Lo incluiremos en el mensaje de WhatsApp.</div>
+              <label style="font-weight:700;">Entrega</label>
+              <div class="row" role="radiogroup" aria-label="Método de entrega" style="flex-wrap:wrap;gap:10px;">
+                <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Recoger en stand" checked>Recoger en stand</label>
+                <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Delivery (coordinar)">Delivery (coordinar)</label>
+              </div>
+              <label for="notes" style="font-weight:700;">Notas</label>
+              <textarea id="notes" rows="3" placeholder="Sin cebolla, extra salsa, etc."></textarea>
             </div>
-            <div style="height:8px"></div>
-            <button id="btnWhatsApp" class="btn-whatsapp" disabled>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.52 3.48A11.5 11.5 0 0 0 3.48 20.52L2 22l1.48-1.48a11.5 11.5 0 1 0 17.04-17.04z"/><path d="M7 12c1 2 3 4 5 5 0 0 2 1 3 0 1-1 2-2 2-3 0-1-1-1-1-1h-2l-1-2-2-1V8s0-1-1-1-2 1-3 2"/></svg>
-              Finalizar pedido por WhatsApp
-            </button>
+          </div>
+
+          <div class="card" style="margin-top:10px;">
+            <div class="content" style="padding-top:8px;">
+              <div class="totals">
+                <div class="line"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+                <div class="line"><span>Descuentos</span><span id="discounts">$0.00</span></div>
+                <div class="line total"><span>Total</span><span id="total">$0.00</span></div>
+              </div>
+              <div style="height:8px"></div>
+              <button id="btnWhatsApp" class="btn-whatsapp" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.52 3.48A11.5 11.5 0 0 0 3.48 20.52L2 22l1.48-1.48a11.5 11.5 0 1 0 17.04-17.04z"/><path d="M7 12c1 2 3 4 5 5 0 0 2 1 3 0 1-1 2-2 2-3 0-1-1-1-1-1h-2l-1-2-2-1V8s0-1-1-1-2 1-3 2"/></svg>
+                Finalizar pedido por WhatsApp
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -167,7 +181,7 @@
   </div>
 
   <script>
-    // Configuración
+    // ===== Configuración =====
     const STORE_NAME = "Mi Emprendimiento";
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593900000000"; // Reemplaza por tu número (sin +, sin espacios)
@@ -186,10 +200,10 @@
       { id:"roll-10", name:"Roll Oreo", price:3.00, color:"#111827", options:null, img:null }
     ];
 
-    // Estado persistente
-    let cart = loadCart();
+    // ===== Estado persistente =====
+    var cart = loadCart();
 
-    // Utilidades
+    // ===== Utilidades =====
     var fmt = new Intl.NumberFormat("es-EC", { style:"currency", currency:CURRENCY, minimumFractionDigits:2 });
     function svgPlaceholder(label, color){ if(!color) color="#111827"; function safe(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); } var svg="<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'>"+
       "<defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'>"+
@@ -201,7 +215,7 @@
       return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg)));
     }
 
-    function saveCart(){ var payload={ cart:cart, customerName:(document.querySelector('#customerName')?document.querySelector('#customerName').value:""), notes:(document.querySelector('#notes')?document.querySelector('#notes').value:""), delivery:(function(){var r=document.querySelector('input[name="delivery"]:checked'); return r? r.value: "Recoger en stand";})() }; localStorage.setItem("feria_cart_v2", JSON.stringify(payload)); }
+    function saveCart(){ var payload={ cart:cart, customerName:(document.querySelector('#customerName')?document.querySelector('#customerName').value:""), notes:(document.querySelector('#notes')?document.querySelector('#notes').value:""), delivery:(function(){var r=document.querySelector('input[name="delivery"]:checked'); return r? r.value: "Recoger en stand";})() }; try{ localStorage.setItem("feria_cart_v2", JSON.stringify(payload)); }catch(e){} }
     function loadCart(){ try{ var raw=localStorage.getItem("feria_cart_v2"); if(!raw) return []; var data=JSON.parse(raw); setTimeout(function(){ if(data.customerName && document.querySelector('#customerName')) document.querySelector('#customerName').value=data.customerName; if(data.notes && document.querySelector('#notes')) document.querySelector('#notes').value=data.notes; if(data.delivery){ var radios=[].slice.call(document.querySelectorAll('input[name="delivery"]')); var found=radios.find(function(x){return x.value===data.delivery}); if(found) found.checked=true; } },0); return Array.isArray(data.cart)?data.cart:[]; }catch(e){ return []; } }
 
     function renderCatalog(){ var grid=document.querySelector('#products'); grid.innerHTML=""; CATALOG.forEach(function(prod){ var img=prod.img||svgPlaceholder(prod.name, prod.color); var opts=(prod.options&&prod.options.length)?("<label class='muted' style='display:block;'>Variante</label><select data-id='"+prod.id+"' class='opt-select'>"+prod.options.map(function(o){return "<option value='"+o+"'>"+o+"</option>"}).join('')+"</select>"):""; var node=document.createElement('div'); node.className='product'; node.innerHTML="<img src='"+img+"' alt='"+prod.name+"' loading='lazy'/><h3>"+prod.name+"</h3><div class='muted'>"+fmt.format(prod.price)+"</div>"+opts+"<div class='row'><button class='grow' data-add='"+prod.id+"'>Agregar</button><button class='btn-outline' data-addq='"+prod.id+"'>+1</button></div>"; grid.appendChild(node); }); grid.addEventListener('click', function(e){ var id=(e.target.getAttribute('data-add')||e.target.getAttribute('data-addq')); if(!id) return; var prod=CATALOG.find(function(p){return p.id===id}); if(!prod) return; var sel=e.target.closest('.product').querySelector('.opt-select'); addToCart(prod, sel?sel.value:null); }); }
@@ -234,7 +248,7 @@ Total: "+fmt.format(subtotal); var thanks="
 ¡Gracias!"; return header+cliente+body+entrega+notas+total+thanks; }
     function goWhatsApp(){ if(!cart.length) return; var msg=buildWhatsAppMessage(); var url="https://wa.me/"+STORE_WHATSAPP+"?text="+encodeURIComponent(msg); window.open(url,'_blank'); }
 
-    // Eventos UI sheet
+    // ===== Eventos UI sheet =====
     var sheet=document.querySelector('#sheet');
     var openSheetBtn=document.querySelector('#openSheet');
     var closeSheetBtn=document.querySelector('#closeSheetBtn');
@@ -247,19 +261,7 @@ Total: "+fmt.format(subtotal); var thanks="
     document.addEventListener('input', function(e){ if(e.target && (e.target.id==='customerName' || e.target.id==='notes')) saveCart(); });
     document.addEventListener('change', function(e){ if(e.target && e.target.name==='delivery') saveCart(); });
 
-    // Intro control
-    function startApp(){ var intro=document.getElementById('intro'); try{ localStorage.setItem('feria_intro_seen','1'); }catch(e){} if(intro){ intro.classList.add('hide'); setTimeout(function(){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } }, 360); } }
-    // Intro control
-    document.addEventListener('DOMContentLoaded', function(){
-      var seen=null; try{ seen=localStorage.getItem('feria_intro_seen'); }catch(e){}
-      if(seen==='1'){
-        var intro=document.getElementById('intro');
-        if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); }
-      }
-    }); var startBtn=document.getElementById('startBtn'); var seen=localStorage.getItem('feria_intro_seen'); if(seen==='1'){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } } if(startBtn){ startBtn.addEventListener('click', function(){ if(intro){ intro.classList.add('hide'); } localStorage.setItem('feria_intro_seen','1'); setTimeout(function(){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } }, 360); }); }
-    });
-
-    // Render inicial
+    // ===== Render inicial =====
     renderCatalog();
     renderCart();
     if(STORE_NAME){ document.title = "Carrito — "+STORE_NAME; }
