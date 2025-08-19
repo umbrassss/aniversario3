@@ -41,7 +41,12 @@
     #started:checked ~ .intro{display:none}
 
     /* Barra inferior del carrito */
-    .fab-cart{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px env(safe-area-inset-right) calc(14px + env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(180deg,rgba(16,24,20,.6),rgba(16,24,20,.9));border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px)}
+    .fab-cart{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px env(safe-area-inset-right) calc(14px + env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(180deg,rgba(16,24,20,.6),rgba(16,24,20,.9));border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px}
+    .fab-cart[hidden]{display:none !important}
+    .fab-cart button{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#22c55e,#16a34a)}
+
+    /* Sheet del carrito */
+    .sheetposition:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px env(safe-area-inset-right) calc(14px + env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(180deg,rgba(16,24,20,.6),rgba(16,24,20,.9));border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px)}
     .fab-cart button{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#22c55e,#16a34a)}
 
     /* Sheet del carrito */
@@ -81,9 +86,53 @@
     .e7{top:8%;left:40%;animation-duration:6.2s}
     .e8{bottom:26%;right:40%;animation-duration:6.6s}
     @keyframes floatY{0%{transform:translateY(-6px)}100%{transform:translateY(6px)}}
+  
+
+    /* ===== Bienvenida superpuesta en la MISMA interfaz (sin JS) ===== */
+    #started{position:absolute;opacity:0;pointer-events:none}
+    .intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;padding:20px;background:radial-gradient(1200px 800px at 50% 0%, rgba(96,165,250,.12), transparent 35%), linear-gradient(180deg,#0d1014,#10141b)}
+    .intro .box{width:min(520px,92vw);padding:18px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
+    .intro h1{margin:4px 0 2px 0;font-size:22px}
+    .intro p{margin:0;color:var(--muted)}
+    .btn-main{margin-top:12px;background:linear-gradient(180deg,#22c55e,#16a34a);padding:12px 18px;border-radius:14px;font-weight:800;display:inline-block}
+    .emoji-cloud{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+    .emoji{position:absolute;font-size:34px;opacity:.9;animation:floatY 6s ease-in-out infinite alternate}
+    .e1{top:14%;left:12%;animation-duration:7s}
+    .e2{top:22%;right:10%;animation-duration:6s}
+    .e3{top:38%;left:6%;animation-duration:5.5s}
+    .e4{top:56%;right:14%;animation-duration:7.2s}
+    .e5{bottom:18%;left:22%;animation-duration:6.8s}
+    .e6{bottom:12%;right:18%;animation-duration:5.8s}
+    .e7{top:8%;left:40%;animation-duration:6.2s}
+    .e8{bottom:26%;right:40%;animation-duration:6.6s}
+    @keyframes floatY{0%{transform:translateY(-6px)}100%{transform:translateY(6px)}}
+    /* Ocultar bienvenida cuando se marque el toggle */
+    #started:checked ~ .intro{display:none}
   </style>
 </head>
 <body>
+  <!-- Toggle sin JS: al marcar #started se oculta la intro y se usa la misma interfaz -->
+  <input id="started" type="checkbox" />
+
+  <!-- Bienvenida superpuesta (misma página) -->
+  <div class="intro">
+    <div class="emoji-cloud" aria-hidden="true">
+      <span class="emoji e1">🍪</span>
+      <span class="emoji e2">🍪</span>
+      <span class="emoji e3">🍪</span>
+      <span class="emoji e4">🍪</span>
+      <span class="emoji e5">🍪</span>
+      <span class="emoji e6">🍪</span>
+      <span class="emoji e7">🍪</span>
+      <span class="emoji e8">🍪</span>
+    </div>
+    <div class="box card">
+      <div style="font-weight:800;letter-spacing:.3px">¡Bienvenid@!</div>
+      <h1>Preordena tus rolls y galletas</h1>
+      <p>Haz tu pedido ahora y finaliza por WhatsApp</p>
+      <label for="started" class="btn-main">PRE-ORDENA</label>
+    </div>
+  </div>
   <!-- Toggle sin JS: al marcar #started se oculta la intro y aparece la app -->
   <input id="started" type="checkbox" />
 
@@ -234,20 +283,25 @@
         empty.style.display='none'; list.style.display='grid'; forms.style.display='block'; btn.disabled=false; list.innerHTML=''; cart.forEach(function(item){ var node=document.createElement('div'); node.className='cart-item'; node.innerHTML="<img src='"+item.img+"' alt='"+item.name+"'/><div><div style='font-weight:700;font-size:14px'>"+item.name+(item.option?" — "+item.option:"")+"</div><div class='muted'>"+fmt.format(item.price)+" c/u</div></div><div style='display:flex;align-items:center;gap:8px;'><div class='qty'><button aria-label='Menos' onclick=\"changeQty('"+item.key+"',-1)\">−</button><input aria-label='Cantidad' type='number' min='1' value='"+item.qty+"' oninput=\"setQty('"+item.key+"', this.value)\"/><button aria-label='Más' onclick=\"changeQty('"+item.key+"',1)\">+</button></div><button class='btn-outline' style='border-color:rgba(239,68,68,.55);' aria-label='Eliminar' onclick=\"removeItem('"+item.key+"')\">✕</button></div>"; list.appendChild(node); }); }
       subtotalEl.textContent=fmt.format(subtotal); discountsEl.textContent=fmt.format(discounts); totalEl.textContent=fmt.format(total); saveCart(); }
 
-    function buildWhatsAppMessage(){ var name=(document.querySelector('#customerName')?document.querySelector('#customerName').value:'').trim(); var delivery=(function(){var r=document.querySelector('input[name="delivery"]:checked'); return r? r.value : 'Recoger en stand';})(); var notes=(document.querySelector('#notes')?document.querySelector('#notes').value:'').trim(); var subtotal=0; var lines=cart.map(function(i){ var line=i.price*i.qty; subtotal+=line; return "• "+i.qty+"× "+i.name+(i.option?" — "+i.option:'')+" — "+fmt.format(line); }).join('
-'); var header="*Pedido "+(STORE_NAME?('— '+STORE_NAME):'')+"*"; var cliente=name?"
-Cliente: "+name:''; var body="
-
-"+lines; var entrega="
-
-Entrega: "+delivery; var notas=notes?"
-Notas: "+notes:''; var total="
-
-Total: "+fmt.format(subtotal); var thanks="
-
-¡Gracias!"; return header+cliente+body+entrega+notas+total+thanks; }
+    function buildWhatsAppMessage(){
+      var name=(document.querySelector('#customerName')?document.querySelector('#customerName').value:'').trim();
+      var delivery=(function(){var r=document.querySelector('input[name="delivery"]:checked'); return r? r.value : 'Recoger en stand';})();
+      var notes=(document.querySelector('#notes')?document.querySelector('#notes').value:'').trim();
+      var subtotal=0;
+      var lines=cart.map(function(i){
+        var line=i.price*i.qty; subtotal+=line;
+        return '• '+i.qty+'× '+i.name+(i.option?' — '+i.option:'')+' — '+fmt.format(line);
+      }).join('\n');
+      var header='*Pedido '+(STORE_NAME?('— '+STORE_NAME):'')+'*';
+      var cliente=name?'\nCliente: '+name:'';
+      var body='\n\n'+lines;
+      var entrega='\n\nEntrega: '+delivery;
+      var notas=notes?'\nNotas: '+notes:'';
+      var total='\n\nTotal: '+fmt.format(subtotal);
+      var thanks='\n\n¡Gracias!';
+      return header+cliente+body+entrega+notas+total+thanks;
+    }
     function goWhatsApp(){ if(!cart.length) return; var msg=buildWhatsAppMessage(); var url="https://wa.me/"+STORE_WHATSAPP+"?text="+encodeURIComponent(msg); window.open(url,'_blank'); }
-
     // ===== Eventos UI sheet =====
     var sheet=document.querySelector('#sheet');
     var openSheetBtn=document.querySelector('#openSheet');
