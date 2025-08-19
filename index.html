@@ -56,8 +56,8 @@
     .muted.center{text-align:center}
 
     /* Intro (pantalla de bienvenida) */
-    .intro{position:fixed;inset:0;z-index:60;display:grid;place-items:center;text-align:center;padding:20px;background:radial-gradient(1200px 800px at 50% 0%, rgba(96,165,250,.12), transparent 35%), linear-gradient(180deg,#0d1014,#10141b)}
-    .intro.hide{opacity:0;transform:scale(.98);transition:opacity .28s ease, transform .28s ease;pointer-events:none}
+    .intro{position:fixed;inset:0;z-index:60;display:grid;place-items:center;text-align:center;padding:20px;background:radial-gradient(1200px 800px at 50% 0%, rgba(96,165,250,.12), transparent 35%), linear-gradient(180deg,#0d1014,#10141b);transition:opacity .28s ease, transform .28s ease}
+    .intro.hide{opacity:0;transform:scale(.98);pointer-events:none}
     .intro .box{width:min(520px,92vw);padding:18px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
     .intro h1{margin:4px 0 2px 0;font-size:22px}
     .intro p{margin:0;color:var(--muted)}
@@ -80,19 +80,19 @@
   <div id="intro" class="intro">
     <div class="emoji-cloud" aria-hidden="true">
       <span class="emoji e1">🍪</span>
-      <span class="emoji e2">🍥</span>
+      <span class="emoji e2">🍪</span>
       <span class="emoji e3">🍪</span>
-      <span class="emoji e4">🍥</span>
+      <span class="emoji e4">🍪</span>
       <span class="emoji e5">🍪</span>
-      <span class="emoji e6">🍥</span>
+      <span class="emoji e6">🍪</span>
       <span class="emoji e7">🍪</span>
-      <span class="emoji e8">🍥</span>
+      <span class="emoji e8">🍪</span>
     </div>
     <div class="box card">
       <div style="font-weight:800;letter-spacing:.3px">¡Bienvenid@!</div>
       <h1>Preordena tus rolls y galletas</h1>
       <p>Haz tu pedido ahora y finaliza por WhatsApp</p>
-      <button id="startBtn" class="btn-main">PRE-ORDENA</button>
+      <button id="startBtn" class="btn-main" onclick="startApp()">PRE-ORDENA</button>
     </div>
   </div>
 
@@ -248,7 +248,15 @@ Total: "+fmt.format(subtotal); var thanks="
     document.addEventListener('change', function(e){ if(e.target && e.target.name==='delivery') saveCart(); });
 
     // Intro control
-    document.addEventListener('DOMContentLoaded', function(){ var intro=document.getElementById('intro'); var startBtn=document.getElementById('startBtn'); var seen=localStorage.getItem('feria_intro_seen'); if(seen==='1'){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } } if(startBtn){ startBtn.addEventListener('click', function(){ if(intro){ intro.classList.add('hide'); } localStorage.setItem('feria_intro_seen','1'); setTimeout(function(){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } }, 360); }); }
+    function startApp(){ var intro=document.getElementById('intro'); try{ localStorage.setItem('feria_intro_seen','1'); }catch(e){} if(intro){ intro.classList.add('hide'); setTimeout(function(){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } }, 360); } }
+    // Intro control
+    document.addEventListener('DOMContentLoaded', function(){
+      var seen=null; try{ seen=localStorage.getItem('feria_intro_seen'); }catch(e){}
+      if(seen==='1'){
+        var intro=document.getElementById('intro');
+        if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); }
+      }
+    }); var startBtn=document.getElementById('startBtn'); var seen=localStorage.getItem('feria_intro_seen'); if(seen==='1'){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } } if(startBtn){ startBtn.addEventListener('click', function(){ if(intro){ intro.classList.add('hide'); } localStorage.setItem('feria_intro_seen','1'); setTimeout(function(){ if(intro && intro.parentNode){ intro.parentNode.removeChild(intro); } }, 360); }); }
     });
 
     // Render inicial
