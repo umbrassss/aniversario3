@@ -65,8 +65,8 @@
   <header>
     <div class="head">
       <div>
-        <div class="brand">Preorden — Feria</div>
-        <div class="sub">Paso 1: elige tus productos</div>
+        <div class="brand">Choonkies Store</div>
+        <div class="sub">Choonkies Store</div>
       </div>
       <span id="cartCount" class="badge">0</span>
     </div>
@@ -110,10 +110,10 @@
             <label style="font-weight:700;">Entrega</label>
             <div class="row" role="radiogroup" aria-label="Método de entrega" style="flex-wrap:wrap;gap:10px;">
               <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Recoger en stand" checked>Recoger en stand</label>
-              <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Delivery (coordinar)">Delivery (coordinar)</label>
+              
             </div>
             <label for="notes" style="font-weight:700;">Notas</label>
-            <textarea id="notes" rows="3" placeholder="Sin cebolla, extra salsa, etc."></textarea>
+            <textarea id="notes" rows="3" placeholder="Escribe tus indicaciones del pedido aquí…"></textarea>
           </div>
         </div>
 
@@ -143,23 +143,24 @@
      */
 
     // ⚙️ CONFIGURACIÓN
-    const STORE_NAME = "Mi Emprendimiento";
+    const STORE_NAME = "Choonkies";
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248"; // Reemplaza por tu número (sin +, sin espacios)
 
     // 🛍️ CATÁLOGO (ejemplo)
     const CATALOG = [
-      // EDITA precios si deseas — dejé 3.00 como base
-      { id:"roll-01", name:"Nutella Classic", price:3.00, color:"#3b82f6", options:null, img:null },
-      { id:"roll-02", name:"Cookies n’ cream", price:3.00, color:"#475569", options:null, img:null },
-      { id:"roll-03", name:"Churro", price:3.00, color:"#b45309", options:null, img:null },
-      { id:"roll-04", name:"Primavera", price:3.00, color:"#10b981", options:null, img:null },
-      { id:"roll-05", name:"Red Velvet", price:3.00, color:"#ef4444", options:null, img:null },
-      { id:"roll-06", name:"Doble chocolate Roll clásico", price:3.00, color:"#7c3aed", options:null, img:null },
-      { id:"roll-07", name:"Roll Mora", price:3.00, color:"#8b5cf6", options:null, img:null },
-      { id:"roll-08", name:"Roll Brownie", price:3.00, color:"#4b5563", options:null, img:null },
-      { id:"roll-09", name:"Roll Caramelo", price:3.00, color:"#d97706", options:null, img:null },
-      { id:"roll-10", name:"Roll Oreo", price:3.00, color:"#111827", options:null, img:null }
+      { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", options:null, img:null },
+      { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", options:null, img:null },
+      { id:"roll-03", name:"Churro", price:1.00, color:"#b45309", options:null, img:null },
+      { id:"roll-04", name:"Primavera", price:1.00, color:"#10b981", options:null, img:null },
+      { id:"roll-05", name:"Red Velvet", price:1.00, color:"#ef4444", options:null, img:null },
+      { id:"roll-11", name:"Doble chocolate", price:1.00, color:"#7c3aed", options:null, img:null },
+      { id:"roll-06", name:"Roll clásico", price:1.50, color:"#6366f1", options:null, img:null },
+      { id:"roll-07", name:"Roll Mora", price:1.50, color:"#8b5cf6", options:null, img:null },
+      { id:"roll-08", name:"Roll Brownie", price:1.50, color:"#4b5563", options:null, img:null },
+      { id:"roll-09", name:"Roll Caramelo", price:1.50, color:"#d97706", options:null, img:null },
+      { id:"roll-10", name:"Roll Oreo", price:1.50, color:"#111827", options:null, img:null },
+      { id:"roll-12", name:"Cookies Pots", price:2.00, color:"#22c55e", options:null, img:null }
     ];
 
     // 🧠 Estado
