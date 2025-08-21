@@ -297,7 +297,7 @@
      * - "+1" agrega directo; "Agregar" abre detalle
      * - Validación de nombre antes de WhatsApp
      * - Bloqueo de scroll mientras haya paneles abiertos
-     * - 🔁 FAB sincronizado al eliminar productos
+     * - 🔁 FAB sincronizado al eliminar productos (sin cerrar el panel automáticamente)
      * - 🚫 Sin “gutter” horizontal fuera del slider
      */
 
@@ -529,13 +529,7 @@
         if($fabCount) $fabCount.textContent=String(itemCount);
         if($fabTotal) $fabTotal.textContent=fmt.format(total);
       } else {
-        // 🧹 Sin items: cierra sheet, desbloquea scroll, oculta y resetea FAB
-        const sheet=document.querySelector('#sheet');
-        if(sheet && sheet.classList.contains('open')){
-          sheet.classList.remove('open');
-          sheet.setAttribute('aria-hidden','true');
-          unlockScroll();
-        }
+        // ✅ Ya no cerramos el panel automáticamente.
         if($fabCount) $fabCount.textContent="0";
         if($fabTotal) $fabTotal.textContent=fmt.format(0);
         $fab.hidden=true;
