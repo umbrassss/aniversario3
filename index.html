@@ -73,7 +73,7 @@
     }
     .fab-cart button{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#f59e0b,#d97706)} /* NARANJA */
 
-    /* Bottom Sheet */
+    /* Bottom Sheet (se reutiliza estilo para carrito y detalle) */
     .sheet{position:fixed;inset:0;z-index:40;display:none}
     .sheet.open{display:block}
     .sheet .overlay{position:absolute;inset:0;background:rgba(0,0,0,.45)}
@@ -129,7 +129,7 @@
     <button id="openSheet"><strong>Ver pedido</strong> (<span id="fabCount">0</span>) • <span id="fabTotal">$0.00</span></button>
   </div>
 
-  <!-- SHEET (Paso 2) -->
+  <!-- SHEET (Paso 2 - Carrito) -->
   <div id="sheet" class="sheet" aria-hidden="true" role="dialog" aria-labelledby="sheetTitle">
     <div class="overlay" id="closeSheet"></div>
     <div class="panel">
@@ -178,11 +178,39 @@
     </div>
   </div>
 
+  <!-- SHEET (Detalle de producto) -->
+  <div id="detailSheet" class="sheet" aria-hidden="true" role="dialog" aria-labelledby="detailTitle">
+    <div class="overlay" id="closeDetail"></div>
+    <div class="panel">
+      <div class="handle"></div>
+      <div class="content">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+          <div>
+            <div id="detailTitle" style="font-weight:800;">Detalle del producto</div>
+            <div class="sub">Revisa y agrega al pedido</div>
+          </div>
+          <button id="closeDetailBtn" class="btn-outline">Cerrar</button>
+        </div>
+
+        <div class="card" style="padding:10px;">
+          <img id="detailImg" src="" alt="" style="width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0b1220;aspect-ratio:4/3;object-fit:cover"/>
+          <div style="display:grid;gap:6px;margin-top:10px;">
+            <div style="font-weight:800;font-size:16px" id="detailName">Nombre</div>
+            <div class="muted" id="detailPrice">$0.00</div>
+            <div class="muted" id="detailIngredients">Galleta hecha de masa de galleta</div>
+          </div>
+          <div style="height:10px;"></div>
+          <button id="detailAddBtn" style="width:100%;">Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     /**
-     * ✅ FLUJO MÓVIL EN 2 PASOS
-     * 1) Mostrar solo el menú. (FAB oculto mientras no hay productos)
-     * 2) Al agregar algo, aparece la barra inferior. Tocar abre el "sheet" con el carrito y el checkout.
+     * ✅ FLUJO MÓVIL EN 2 PASOS + detalle
+     * - “+1” agrega directo
+     * - “Agregar” abre sheet de detalle; desde ahí se agrega y se cierra
      */
 
     // ⚙️ CONFIGURACIÓN
@@ -190,44 +218,129 @@
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248"; // Reemplaza por tu número (sin +, sin espacios)
 
-    // 🛍️ CATÁLOGO (con imágenes .jpg)
+    // 🛍️ CATÁLOGO (con imágenes .jpg + ingredientes placeholder)
     const CATALOG = [
-      { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
-      { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
-      { id:"roll-03", name:"Churro", price:1.00, color:"#b45309", options:null, img:"assets/img/roll-03-churro.jpg" },
-      { id:"roll-04", name:"Primavera", price:1.00, color:"#10b981", options:null, img:"assets/img/roll-04-primavera.jpg" },
-      { id:"roll-05", name:"Red Velvet", price:1.00, color:"#ef4444", options:null, img:"assets/img/roll-05-red-velvet.jpg" },
-      { id:"roll-11", name:"Doble chocolate", price:1.00, color:"#7c3aed", options:null, img:"assets/img/roll-11-doble-chocolate.jpg" },
-      { id:"roll-06", name:"Roll clásico", price:1.50, color:"#6366f1", options:null, img:"assets/img/roll-06-roll-clasico.jpg" },
-      { id:"roll-07", name:"Roll Mora", price:1.50, color:"#8b5cf6", options:null, img:"assets/img/roll-07-roll-mora.jpg" },
-      { id:"roll-08", name:"Roll Brownie", price:1.50, color:"#4b5563", options:null, img:"assets/img/roll-08-roll-brownie.jpg" },
-      { id:"roll-09", name:"Roll Caramelo", price:1.50, color:"#d97706", options:null, img:"assets/img/roll-09-roll-caramelo.jpg" },
-      { id:"roll-10", name:"Roll Oreo", price:1.50, color:"#111827", options:null, img:"assets/img/roll-10-roll-oreo.jpg" },
-      { id:"roll-12", name:"Cookies Pots", price:2.00, color:"#22c55e", options:null, img:"assets/img/roll-12-cookies-pots.jpg" }
+      { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
+      { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
+      { id:"roll-03", name:"Churro", price:1.00, color:"#b45309", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-03-churro.jpg" },
+      { id:"roll-04", name:"Primavera", price:1.00, color:"#10b981", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-04-primavera.jpg" },
+      { id:"roll-05", name:"Red Velvet", price:1.00, color:"#ef4444", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-05-red-velvet.jpg" },
+      { id:"roll-11", name:"Doble chocolate", price:1.00, color:"#7c3aed", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-11-doble-chocolate.jpg" },
+      { id:"roll-06", name:"Roll clásico", price:1.50, color:"#6366f1", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-06-roll-clasico.jpg" },
+      { id:"roll-07", name:"Roll Mora", price:1.50, color:"#8b5cf6", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-07-roll-mora.jpg" },
+      { id:"roll-08", name:"Roll Brownie", price:1.50, color:"#4b5563", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-08-roll-brownie.jpg" },
+      { id:"roll-09", name:"Roll Caramelo", price:1.50, color:"#d97706", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-09-roll-caramelo.jpg" },
+      { id:"roll-10", name:"Roll Oreo", price:1.50, color:"#111827", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-10-roll-oreo.jpg" },
+      { id:"roll-12", name:"Cookies Pots", price:2.00, color:"#22c55e", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-12-cookies-pots.jpg" }
     ];
 
     // 🧠 Estado
     let cart = loadCart();
+    let currentProductId = null;
 
     // 🧩 Utilidades
     const fmt = new Intl.NumberFormat("es-EC", { style:"currency", currency:CURRENCY, minimumFractionDigits:2 });
-    function svgPlaceholder(label, color="#111827"){ const safe=(s)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0%' stop-color='${color}' stop-opacity='.9'/><stop offset='100%' stop-color='${color}' stop-opacity='.6'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><g fill='white' fill-opacity='.08'><circle cx='100' cy='80' r='50'/><circle cx='720' cy='520' r='70'/><rect x='40' y='500' width='180' height='60' rx='12'/></g><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='40' fill='white' fill-opacity='.9'>${safe(label)}</text></svg>`; return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg))); }
+    function svgPlaceholder(label, color="#111827"){
+      const safe=(s)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+      const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0%' stop-color='${color}' stop-opacity='.9'/><stop offset='100%' stop-color='${color}' stop-opacity='.6'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><g fill='white' fill-opacity='.08'><circle cx='100' cy='80' r='50'/><circle cx='720' cy='520' r='70'/><rect x='40' y='500' width='180' height='60' rx='12'/></g><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='40' fill='white' fill-opacity='.9'>${safe(label)}</text></svg>`;
+      return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg)));
+    }
 
-    function saveCart(){ const payload={ cart, customerName:document.querySelector('#customerName').value||"", notes:document.querySelector('#notes').value||"", delivery:(document.querySelector('input[name="delivery"]:checked').value)||"Recoger en stand" }; localStorage.setItem("feria_cart_v2", JSON.stringify(payload)); }
-    function loadCart(){ try{ const raw=localStorage.getItem("feria_cart_v2"); if(!raw) return []; const data=JSON.parse(raw); // hidrata luego de montar sheet
-      setTimeout(()=>{ if(data.customerName && document.querySelector('#customerName')) document.querySelector('#customerName').value=data.customerName; if(data.notes && document.querySelector('#notes')) document.querySelector('#notes').value=data.notes; if(data.delivery){ const r=[...document.querySelectorAll('input[name="delivery"]')].find(x=>x.value===data.delivery); if(r) r.checked=true; } }, 0); return Array.isArray(data.cart)?data.cart:[]; }catch{return []} }
+    function saveCart(){
+      const payload={ cart, customerName:document.querySelector('#customerName').value||"", notes:document.querySelector('#notes').value||"", delivery:(document.querySelector('input[name="delivery"]:checked').value)||"Recoger en stand" };
+      localStorage.setItem("feria_cart_v2", JSON.stringify(payload));
+    }
+    function loadCart(){
+      try{
+        const raw=localStorage.getItem("feria_cart_v2");
+        if(!raw) return [];
+        const data=JSON.parse(raw);
+        // hidrata luego de montar sheet
+        setTimeout(()=>{
+          if(data.customerName && document.querySelector('#customerName')) document.querySelector('#customerName').value=data.customerName;
+          if(data.notes && document.querySelector('#notes')) document.querySelector('#notes').value=data.notes;
+          if(data.delivery){
+            const r=[...document.querySelectorAll('input[name="delivery"]')].find(x=>x.value===data.delivery);
+            if(r) r.checked=true;
+          }
+        }, 0);
+        return Array.isArray(data.cart)?data.cart:[];
+      }catch{return []}
+    }
 
-    function renderCatalog(){ const $grid=document.querySelector('#products'); $grid.innerHTML=""; CATALOG.forEach(prod=>{ const img=prod.img||svgPlaceholder(prod.name, prod.color); const opts=(prod.options&&prod.options.length)?`<label class='muted' style='display:block;'>Variante</label><select data-id='${prod.id}' class='opt-select'>${prod.options.map(o=>`<option value='${o}'>${o}</option>`).join('')}</select>`:""; const node=document.createElement('div'); node.className='product'; node.innerHTML=`<img src='${img}' alt='${prod.name}' loading='lazy' decoding='async'/><h3>${prod.name}</h3><div class='muted'>${fmt.format(prod.price)}</div>${opts}<div class='row'><button class='grow' data-add='${prod.id}'>Agregar</button><button class='btn-outline' data-addq='${prod.id}'>+1</button></div>`; $grid.appendChild(node); }); $grid.addEventListener('click', (e)=>{ const id=e.target.getAttribute('data-add')||e.target.getAttribute('data-addq'); if(!id) return; const prod=CATALOG.find(p=>p.id===id); if(!prod) return; const sel=e.target.closest('.product').querySelector('.opt-select'); addToCart(prod, sel?sel.value:null); }); }
+    function renderCatalog(){
+      const $grid=document.querySelector('#products');
+      $grid.innerHTML="";
+      CATALOG.forEach(prod=>{
+        const img=prod.img||svgPlaceholder(prod.name, prod.color);
+        const opts=(prod.options&&prod.options.length)?`<label class='muted' style='display:block;'>Variante</label><select data-id='${prod.id}' class='opt-select'>${prod.options.map(o=>`<option value='${o}'>${o}</option>`).join('')}</select>`:"";
+        const node=document.createElement('div');
+        node.className='product';
+        node.innerHTML=`<img src='${img}' alt='${prod.name}' loading='lazy' decoding='async'/><h3>${prod.name}</h3><div class='muted'>${fmt.format(prod.price)}</div>${opts}<div class='row'><button class='grow' data-add='${prod.id}'>Agregar</button><button class='btn-outline' data-addq='${prod.id}'>+1</button></div>`;
+        $grid.appendChild(node);
+      });
 
-    function addToCart(product, option=null){ const key=product.id+(option?`__${option}`:""); const existing=cart.find(i=>i.key===key); if(existing){ existing.qty+=1; } else { cart.push({ key, id:product.id, name:product.name, option, price:product.price, img:product.img||svgPlaceholder(product.name, product.color), qty:1 }); } renderCart(); }
+      // Delegación de clics: "Agregar" abre detalle; "+1" agrega directo
+      $grid.addEventListener('click', (e)=>{
+        const addId = e.target.getAttribute('data-add');
+        const plusId = e.target.getAttribute('data-addq');
+        if(addId){
+          openDetail(addId);
+          return;
+        }
+        if(plusId){
+          const prod=CATALOG.find(p=>p.id===plusId);
+          if(!prod) return;
+          const sel=e.target.closest('.product')?.querySelector('.opt-select');
+          addToCart(prod, sel?sel.value:null);
+        }
+      });
+    }
 
-    function changeQty(key, delta){ const item=cart.find(i=>i.key===key); if(!item) return; item.qty=Math.max(1, item.qty+delta); renderCart(); }
-    function setQty(key, value){ const n=Math.max(1, Number(value)||1); const item=cart.find(i=>i.key===key); if(!item) return; item.qty=n; renderCart(); }
-    function removeItem(key){ cart=cart.filter(i=>i.key!==key); renderCart(); }
+    function addToCart(product, option=null){
+      const key=product.id+(option?`__${option}`:"");
+      const existing=cart.find(i=>i.key===key);
+      if(existing){ existing.qty+=1; } else {
+        cart.push({ key, id:product.id, name:product.name, option, price:product.price, img:product.img||svgPlaceholder(product.name, product.color), qty:1 });
+      }
+      renderCart();
+    }
 
-    function renderCart(){ const $fab=document.querySelector('#fabCart'); const $fabCount=document.querySelector('#fabCount'); const $fabTotal=document.querySelector('#fabTotal'); const $countTop=document.querySelector('#cartCount'); const $list=document.querySelector('#sheetList'); const $empty=document.querySelector('#sheetEmpty'); const $forms=document.querySelector('#sheetForms'); const $subtotal=document.querySelector('#subtotal'); const $discounts=document.querySelector('#discounts'); const $total=document.querySelector('#total'); const $btn=document.querySelector('#btnWhatsApp');
+    function changeQty(key, delta){
+      const item=cart.find(i=>i.key===key);
+      if(!item) return;
+      item.qty=Math.max(1, item.qty+delta);
+      renderCart();
+    }
+    function setQty(key, value){
+      const n=Math.max(1, Number(value)||1);
+      const item=cart.find(i=>i.key===key);
+      if(!item) return;
+      item.qty=n;
+      renderCart();
+    }
+    function removeItem(key){
+      cart=cart.filter(i=>i.key!==key);
+      renderCart();
+    }
 
-      const itemCount=cart.reduce((a,b)=>a+b.qty,0); let subtotal=0; cart.forEach(i=>subtotal+=i.price*i.qty); const discounts=0; const total=Math.max(0, subtotal-discounts);
+    function renderCart(){
+      const $fab=document.querySelector('#fabCart');
+      const $fabCount=document.querySelector('#fabCount');
+      const $fabTotal=document.querySelector('#fabTotal');
+      const $countTop=document.querySelector('#cartCount');
+      const $list=document.querySelector('#sheetList');
+      const $empty=document.querySelector('#sheetEmpty');
+      const $forms=document.querySelector('#sheetForms');
+      const $subtotal=document.querySelector('#subtotal');
+      const $discounts=document.querySelector('#discounts');
+      const $total=document.querySelector('#total');
+      const $btn=document.querySelector('#btnWhatsApp');
+
+      const itemCount=cart.reduce((a,b)=>a+b.qty,0);
+      let subtotal=0; cart.forEach(i=>subtotal+=i.price*i.qty);
+      const discounts=0;
+      const total=Math.max(0, subtotal-discounts);
 
       // Top badge
       if($countTop) $countTop.textContent=String(itemCount);
@@ -236,24 +349,108 @@
       if(itemCount>0){ $fab.hidden=false; $fabCount.textContent=String(itemCount); $fabTotal.textContent=fmt.format(total); } else { $fab.hidden=true; }
 
       // Sheet content
-      if(!itemCount){ $empty.style.display='block'; $list.style.display='none'; $forms.style.display='none'; $btn.disabled=true; } else { $empty.style.display='none'; $list.style.display='grid'; $forms.style.display='block'; $btn.disabled=false; $list.innerHTML=''; cart.forEach(item=>{ const node=document.createElement('div'); node.className='cart-item'; node.innerHTML=`<img src='${item.img}' alt='${item.name}'/><div><div style='font-weight:700;font-size:14px'>${item.name}${item.option?` — ${item.option}`:''}</div><div class='muted'>${fmt.format(item.price)} c/u</div></div><div style='display:flex;align-items:center;gap:8px;'><div class='qty'><button aria-label='Menos' onclick="changeQty('${item.key}',-1)">−</button><input aria-label='Cantidad' type='number' min='1' value='${item.qty}' oninput="setQty('${item.key}', this.value)"/><button aria-label='Más' onclick="changeQty('${item.key}',1)">+</button></div><button class='btn-outline' style='border-color:rgba(239,68,68,.55);' aria-label='Eliminar' onclick="removeItem('${item.key}')">✕</button></div>`; $list.appendChild(node); }); }
+      if(!itemCount){
+        $empty.style.display='block';
+        $list.style.display='none';
+        $forms.style.display='none';
+        $btn.disabled=true;
+      } else {
+        $empty.style.display='none';
+        $list.style.display='grid';
+        $forms.style.display='block';
+        $btn.disabled=false;
+        $list.innerHTML='';
+        cart.forEach(item=>{
+          const node=document.createElement('div');
+          node.className='cart-item';
+          node.innerHTML=`<img src='${item.img}' alt='${item.name}'/><div><div style='font-weight:700;font-size:14px'>${item.name}${item.option?` — ${item.option}`:''}</div><div class='muted'>${fmt.format(item.price)} c/u</div></div><div style='display:flex;align-items:center;gap:8px;'><div class='qty'><button aria-label='Menos' onclick="changeQty('${item.key}',-1)">−</button><input aria-label='Cantidad' type='number' min='1' value='${item.qty}' oninput="setQty('${item.key}', this.value)"/><button aria-label='Más' onclick="changeQty('${item.key}',1)">+</button></div><button class='btn-outline' style='border-color:rgba(239,68,68,.55);' aria-label='Eliminar' onclick="removeItem('${item.key}')">✕</button></div>`;
+          $list.appendChild(node);
+        });
+      }
 
-      $subtotal.textContent=fmt.format(subtotal); $discounts.textContent=fmt.format(discounts); $total.textContent=fmt.format(total);
+      $subtotal.textContent=fmt.format(subtotal);
+      $discounts.textContent=fmt.format(discounts);
+      $total.textContent=fmt.format(total);
       saveCart();
     }
 
-    function buildWhatsAppMessage(){ const name=(document.querySelector('#customerName').value||'').trim(); const delivery=(document.querySelector('input[name="delivery"]:checked').value)||'Recoger en stand'; const notes=(document.querySelector('#notes').value||'').trim(); let subtotal=0; const lines=cart.map(i=>{ const line=i.price*i.qty; subtotal+=line; return `• ${i.qty}× ${i.name}${i.option?` — ${i.option}`:''} — ${fmt.format(line)}`; }).join('\n'); const header=`*Pedido ${STORE_NAME?('— '+STORE_NAME):''}*`; const cliente=name?`\nCliente: ${name}`:''; const body=`\n\n${lines}`; const entrega=`\n\nEntrega: ${delivery}`; const notas=notes?`\nNotas: ${notes}`:''; const total=`\n\nTotal: ${fmt.format(subtotal)}`; const thanks=`\n\n¡Gracias!`; return `${header}${cliente}${body}${entrega}${notas}${total}${thanks}`; }
-    function goWhatsApp(){ if(!cart.length) return; const msg=buildWhatsAppMessage(); const url=`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)}`; window.open(url,'_blank'); }
+    // 🧾 Mensaje WhatsApp
+    function buildWhatsAppMessage(){
+      const name=(document.querySelector('#customerName').value||'').trim();
+      const delivery=(document.querySelector('input[name="delivery"]:checked').value)||'Recoger en stand';
+      const notes=(document.querySelector('#notes').value||'').trim();
+      let subtotal=0;
+      const lines=cart.map(i=>{
+        const line=i.price*i.qty; subtotal+=line;
+        return `• ${i.qty}× ${i.name}${i.option?` — ${i.option}`:''} — ${fmt.format(line)}`;
+      }).join('\n');
+      const header=`*Pedido ${STORE_NAME?('— '+STORE_NAME):''}*`;
+      const cliente=name?`\nCliente: ${name}`:'';
+      const body=`\n\n${lines}`;
+      const entrega=`\n\nEntrega: ${delivery}`;
+      const notas=notes?`\nNotas: ${notes}`:'';
+      const total=`\n\nTotal: ${fmt.format(subtotal)}`;
+      const thanks=`\n\n¡Gracias!`;
+      return `${header}${cliente}${body}${entrega}${notas}${total}${thanks}`;
+    }
+    function goWhatsApp(){
+      if(!cart.length) return;
+      const msg=buildWhatsAppMessage();
+      const url=`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+      window.open(url,'_blank');
+    }
 
-    // Eventos UI sheet
+    // 🎛️ Sheet Carrito
     const sheet=document.querySelector('#sheet');
     const openSheetBtn=document.querySelector('#openSheet');
     const closeSheetBtn=document.querySelector('#closeSheetBtn');
     const closeSheetOverlay=document.querySelector('#closeSheet');
-
     openSheetBtn.addEventListener('click', ()=>{ sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false'); });
     closeSheetBtn.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); });
     closeSheetOverlay.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); });
+
+    // 🆕 Sheet Detalle
+    const detailSheet=document.querySelector('#detailSheet');
+    const closeDetailBtn=document.querySelector('#closeDetailBtn');
+    const closeDetailOverlay=document.querySelector('#closeDetail');
+    const detailAddBtn=document.querySelector('#detailAddBtn');
+    const detailImg=document.querySelector('#detailImg');
+    const detailName=document.querySelector('#detailName');
+    const detailPrice=document.querySelector('#detailPrice');
+    const detailIngredients=document.querySelector('#detailIngredients');
+
+    function openDetail(productId){
+      const prod = CATALOG.find(p=>p.id===productId);
+      if(!prod) return;
+      currentProductId = productId;
+
+      // Pinta datos
+      detailImg.src = prod.img || svgPlaceholder(prod.name, prod.color);
+      detailImg.alt = prod.name;
+      detailName.textContent = prod.name;
+      detailPrice.textContent = fmt.format(prod.price);
+      detailIngredients.textContent = prod.ingredients || "Galleta hecha de masa de galleta";
+
+      // Abre
+      detailSheet.classList.add('open');
+      detailSheet.setAttribute('aria-hidden','false');
+    }
+    function closeDetail(){
+      detailSheet.classList.remove('open');
+      detailSheet.setAttribute('aria-hidden','true');
+      currentProductId = null;
+    }
+    function addCurrentToCart(){
+      if(!currentProductId) return;
+      const prod = CATALOG.find(p=>p.id===currentProductId);
+      if(!prod) return;
+      addToCart(prod, null);
+      closeDetail();
+    }
+
+    closeDetailBtn.addEventListener('click', closeDetail);
+    closeDetailOverlay.addEventListener('click', closeDetail);
+    detailAddBtn.addEventListener('click', addCurrentToCart);
 
     document.querySelector('#btnWhatsApp').addEventListener('click', goWhatsApp);
     document.addEventListener('input', (e)=>{ if(e.target.id==='customerName'||e.target.id==='notes') saveCart(); });
