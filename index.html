@@ -103,6 +103,21 @@
     /* ==== SLIDERS (scroll-snap) ==== */
     .rail-section{margin:4px 0 2px 0}
     .rail-title{font-size:14px;line-height:1.2;color:var(--muted);font-weight:700;margin:6px 4px 8px 4px;letter-spacing:.2px}
+
+    .rail-wrap{position:relative}
+    .rail-wrap::before,
+    .rail-wrap::after{
+      content:"";
+      position:absolute; top:0; bottom:0; width:28px;
+      pointer-events:none; z-index:1; transition:opacity .2s ease;
+    }
+    /* Fades de bordes */
+    .rail-wrap::before{left:0; background:linear-gradient(90deg, rgba(11,18,32,.95), rgba(11,18,32,0));}
+    .rail-wrap::after{right:0; background:linear-gradient(270deg, rgba(11,18,32,.95), rgba(11,18,32,0));}
+    .rail-wrap.hide-left::before{opacity:0}
+    .rail-wrap.hide-right::after{opacity:0}
+    .rail-wrap.single::before, .rail-wrap.single::after{display:none}
+
     .rail{
       display:grid;
       grid-auto-flow:column;
@@ -121,6 +136,11 @@
       border-color:rgba(96,165,250,.45);
       box-shadow:0 8px 24px rgba(59,130,246,.15)
     }
+    /* Rail con un solo item: centrado fijo y sin scroll */
+    .rail.rail--single{
+      display:flex; justify-content:center; overflow:hidden;
+    }
+    .rail.rail--single .product{width:80%; max-width:420px}
 
     /* Validación nombre */
     .input-error{border-color:rgba(239,68,68,.9)!important; box-shadow:0 0 0 3px rgba(239,68,68,.15) inset}
@@ -231,11 +251,12 @@
 
   <script>
     /**
-     * ✅ Flujo:
-     * - 3 sliders: Cookies, Rolls, Cookie Pots (scroll-snap + realce del ítem centrado)
-     * - “+1” agrega directo
-     * - “Agregar” abre sheet de detalle
-     * - Validación: nombre obligatorio antes de enviar a WhatsApp
+     * Cambios:
+     * - Sliders con primer ítem centrado (y activo) al cargar
+     * - Fades en los bordes izquierdo/derecho
+     * - Título 3 = "Pots"; producto roll-12 = "Cookie Pot"
+     * - “+1” agrega directo; “Agregar” abre detalle
+     * - Validación de nombre antes de WhatsApp
      */
 
     // ⚙️ CONFIGURACIÓN
@@ -256,7 +277,7 @@
       { id:"roll-08", name:"Roll Brownie", price:1.50, color:"#4b5563", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-08-roll-brownie.jpg" },
       { id:"roll-09", name:"Roll Caramelo", price:1.50, color:"#d97706", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-09-roll-caramelo.jpg" },
       { id:"roll-10", name:"Roll Oreo", price:1.50, color:"#111827", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-10-roll-oreo.jpg" },
-      { id:"roll-12", name:"Cookies Pots", price:2.00, color:"#22c55e", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-12-cookies-pots.jpg" }
+      { id:"roll-12", name:"Cookie Pot", price:2.00, color:"#22c55e", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-12-cookies-pots.jpg" }
     ];
 
     // Grupos para sliders
@@ -306,7 +327,7 @@
 
       renderRail($root, "Cookies", GROUPS.cookies);
       renderRail($root, "Rolls", GROUPS.rolls);
-      renderRail($root, "Cookie Pots", GROUPS.pots);
+      renderRail($root, "Pots", GROUPS.pots);
 
       // Delegación de clics: “Agregar” abre detalle; “+1” agrega directo
       $root.addEventListener('click', (e)=>{
@@ -324,10 +345,11 @@
     function renderRail(root, title, ids){
       const section = document.createElement('div');
       section.className = "rail-section";
-      section.innerHTML = `<div class="rail-title">${title}</div><div class="rail"></div>`;
+      section.innerHTML = `<div class="rail-title">${title}</div><div class="rail-wrap"><div class="rail"></div></div>`;
       root.appendChild(section);
 
       const rail = section.querySelector('.rail');
+      const wrap = section.querySelector('.rail-wrap');
 
       ids.forEach(id=>{
         const prod = CATALOG.find(p=>p.id===id);
@@ -346,7 +368,21 @@
         rail.appendChild(node);
       });
 
+      // Estado activo + fades + centrado inicial
       setupRailActiveState(rail);
+      if(ids.length === 1){
+        rail.classList.add('rail--single');
+        wrap.classList.add('single');
+      }else{
+        // Centrar el primer ítem
+        requestAnimationFrame(()=>{
+          centerFirstCard(rail);
+        });
+      }
+      // Fades iniciales
+      updateRailFades(rail);
+      rail.addEventListener('scroll', ()=>updateRailFades(rail), {passive:true});
+      window.addEventListener('resize', ()=>centerFirstCard(rail));
     }
 
     // Marca el ítem más centrado como activo (escala suave)
@@ -364,6 +400,7 @@
       }, {root: rail, threshold:[0.5,0.75,1]});
       cards.forEach(c=>io.observe(c));
 
+      // Realce por scroll
       let ticking=false;
       rail.addEventListener('scroll', ()=>{
         if(ticking) return;
@@ -384,6 +421,23 @@
       });
 
       setActive(cards[0]);
+    }
+
+    // Centra el primer elemento del rail
+    function centerFirstCard(rail){
+      const first = rail.querySelector('.product');
+      if(!first || rail.classList.contains('rail--single')) return;
+      const offset = first.offsetLeft - (rail.clientWidth - first.clientWidth)/2;
+      rail.scrollLeft = Math.max(0, offset);
+    }
+
+    // Controla la visibilidad de los fades de bordes
+    function updateRailFades(rail){
+      const wrap = rail.parentElement;
+      if(!wrap || !wrap.classList.contains('rail-wrap')) return;
+      const max = Math.max(0, rail.scrollWidth - rail.clientWidth - 1);
+      wrap.classList.toggle('hide-left', rail.scrollLeft <= 2);
+      wrap.classList.toggle('hide-right', rail.scrollLeft >= max);
     }
 
     function addToCart(product, option=null){
