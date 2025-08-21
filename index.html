@@ -250,21 +250,12 @@
   </div>
 
   <script>
-    /**
-     * Cambios:
-     * - Sliders con primer ítem centrado (y activo) al cargar
-     * - Fades en los bordes izquierdo/derecho
-     * - Título 3 = "Pots"; producto roll-12 = "Cookie Pot"
-     * - “+1” agrega directo; “Agregar” abre detalle
-     * - Validación de nombre antes de WhatsApp
-     */
-
-    // ⚙️ CONFIGURACIÓN
+    // Config
     const STORE_NAME = "Choonkies";
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248";
 
-    // 🛍️ CATÁLOGO (con imágenes .jpg + ingredientes placeholder)
+    // Catálogo
     const CATALOG = [
       { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
       { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
@@ -280,18 +271,18 @@
       { id:"roll-12", name:"Cookie Pot", price:2.00, color:"#22c55e", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-12-cookies-pots.jpg" }
     ];
 
-    // Grupos para sliders
+    // Grupos (sliders)
     const GROUPS = {
       cookies: ["roll-01","roll-02","roll-03","roll-04","roll-05","roll-11"],
       rolls:   ["roll-06","roll-07","roll-08","roll-09","roll-10"],
       pots:    ["roll-12"]
     };
 
-    // 🧠 Estado
+    // Estado
     let cart = loadCart();
     let currentProductId = null;
 
-    // 🧩 Utilidades
+    // Utils
     const fmt = new Intl.NumberFormat("es-EC", { style:"currency", currency:CURRENCY, minimumFractionDigits:2 });
     function svgPlaceholder(label, color="#111827"){
       const safe=(s)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -320,7 +311,7 @@
       }catch{return []}
     }
 
-    // Renderiza los 3 sliders
+    // ---- Sliders ----
     function renderCatalog(){
       const $root=document.querySelector('#products');
       $root.innerHTML="";
@@ -368,21 +359,48 @@
         rail.appendChild(node);
       });
 
-      // Estado activo + fades + centrado inicial
       setupRailActiveState(rail);
+
       if(ids.length === 1){
         rail.classList.add('rail--single');
         wrap.classList.add('single');
+        // quitar paddings en single
+        rail.style.paddingLeft = '0px';
+        rail.style.paddingRight = '0px';
       }else{
-        // Centrar el primer ítem
+        // Espaciadores laterales para centrar primer/último ítem
+        setRailSidePadding(rail);
+        // Arrancar centrado en el primero
         requestAnimationFrame(()=>{
           centerFirstCard(rail);
+          updateRailFades(rail);
+        });
+        // Recalcular al redimensionar
+        window.addEventListener('resize', ()=>{
+          setRailSidePadding(rail);
+          centerFirstCard(rail);
+          updateRailFades(rail);
         });
       }
-      // Fades iniciales
+
       updateRailFades(rail);
       rail.addEventListener('scroll', ()=>updateRailFades(rail), {passive:true});
-      window.addEventListener('resize', ()=>centerFirstCard(rail));
+    }
+
+    // Calcula padding izquierdo/derecho para simular “producto invisible” y centrar extremos
+    function setRailSidePadding(rail){
+      const cards = [...rail.querySelectorAll('.product')];
+      if(cards.length < 2) return;
+
+      const first = cards[0];
+      const last  = cards[cards.length-1];
+
+      // Mantener padding top/bottom del CSS; sólo ajustamos left/right
+      const leftPad  = Math.max(0, (rail.clientWidth - first.clientWidth)/2);
+      const rightPad = Math.max(0, (rail.clientWidth - last.clientWidth)/2);
+
+      rail.style.paddingLeft  = `${leftPad}px`;
+      rail.style.paddingRight = `${rightPad}px`;
     }
 
     // Marca el ítem más centrado como activo (escala suave)
@@ -423,12 +441,10 @@
       setActive(cards[0]);
     }
 
-    // Centra el primer elemento del rail
+    // Con el padding aplicado, scrollLeft=0 ya centra el primero
     function centerFirstCard(rail){
-      const first = rail.querySelector('.product');
-      if(!first || rail.classList.contains('rail--single')) return;
-      const offset = first.offsetLeft - (rail.clientWidth - first.clientWidth)/2;
-      rail.scrollLeft = Math.max(0, offset);
+      if(rail.classList.contains('rail--single')) return;
+      rail.scrollLeft = 0;
     }
 
     // Controla la visibilidad de los fades de bordes
@@ -440,6 +456,7 @@
       wrap.classList.toggle('hide-right', rail.scrollLeft >= max);
     }
 
+    // ---- Carrito ----
     function addToCart(product, option=null){
       const key=product.id+(option?`__${option}`:"");
       const existing=cart.find(i=>i.key===key);
@@ -514,7 +531,7 @@
       saveCart();
     }
 
-    // 🧾 WhatsApp (con validación de nombre)
+    // WhatsApp + validación de nombre
     function buildWhatsAppMessage(){
       const name=(document.querySelector('#customerName').value||'').trim();
       const delivery=(document.querySelector('input[name="delivery"]:checked').value)||'Recoger en stand';
@@ -551,7 +568,7 @@
       window.open(url,'_blank');
     }
 
-    // 🎛️ Sheet Carrito
+    // Sheet Carrito
     const sheet=document.querySelector('#sheet');
     const openSheetBtn=document.querySelector('#openSheet');
     const closeSheetBtn=document.querySelector('#closeSheetBtn');
@@ -560,7 +577,7 @@
     closeSheetBtn.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); });
     closeSheetOverlay.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); });
 
-    // 🆕 Sheet Detalle
+    // Sheet Detalle
     const detailSheet=document.querySelector('#detailSheet');
     const closeDetailBtn=document.querySelector('#closeDetailBtn');
     const closeDetailOverlay=document.querySelector('#closeDetail');
