@@ -22,30 +22,29 @@
     html,body{height:100%}
     body{
       margin:0;
-      background:linear-gradient(180deg,#0a0f1a,var(--bg)); /* azul muy oscuro */
+      background:linear-gradient(180deg,#0a0f1a,var(--bg));
       color:var(--text);
       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto
     }
-    .wrap{max-width:560px;margin:0 auto;padding:12px 14px 90px} /* padding bottom para la barra */
+    .wrap{max-width:560px;margin:0 auto;padding:12px 14px 90px}
 
     header{
       position:sticky;top:0;z-index:20;
       backdrop-filter:saturate(140%) blur(8px);
-      background:linear-gradient(180deg,rgba(15,23,42,.90),rgba(15,23,42,.75)); /* azul #0f172a */
+      background:linear-gradient(180deg,rgba(15,23,42,.90),rgba(15,23,42,.75));
       border-bottom:1px solid rgba(255,255,255,.06)
     }
     .head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px}
     .brand{font-weight:800;letter-spacing:.3px}
     .sub{color:var(--muted);font-size:12px}
 
-    /* Paso 1: catálogo a pantalla completa */
     .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow)}
     .products{padding:10px}
     .products .title{font-weight:800;font-size:18px;padding:2px 2px 8px 2px}
-    .products-grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:360px){.products-grid{grid-template-columns:1fr}}
-    .product{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
-    .product img{aspect-ratio:4/3;width:100%;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0b1220} /* azul oscuro */
+
+    /* Tarjeta de producto */
+    .product{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease}
+    .product img{aspect-ratio:4/3;width:100%;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0b1220}
     .product h3{margin:2px 0 0 0;font-size:16px}
     .muted{color:var(--muted);font-size:12px}
     .row{display:flex;align-items:center;gap:8px}
@@ -64,22 +63,22 @@
     .btn-outline{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--text)}
     .badge{display:inline-block;padding:2px 8px;font-size:12px;border-radius:999px;background:rgba(96,165,250,.18);border:1px solid rgba(96,165,250,.35);color:#dbeafe}
 
-    /* Barra fija (aparece cuando hay items) */
+    /* Barra fija */
     .fab-cart{
       position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:10px;
       padding:14px env(safe-area-inset-right) calc(14px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
-      background:linear-gradient(180deg,rgba(12,20,34,.6),rgba(12,20,34,.9)); /* azul translúcido */
+      background:linear-gradient(180deg,rgba(12,20,34,.6),rgba(12,20,34,.9));
       border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px)
     }
-    .fab-cart button{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#f59e0b,#d97706)} /* NARANJA */
+    .fab-cart button{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#f59e0b,#d97706)}
 
-    /* Bottom Sheet (se reutiliza estilo para carrito y detalle) */
+    /* Bottom Sheet (carrito y detalle) */
     .sheet{position:fixed;inset:0;z-index:40;display:none}
     .sheet.open{display:block}
     .sheet .overlay{position:absolute;inset:0;background:rgba(0,0,0,.45)}
     .sheet .panel{
       position:absolute;left:0;right:0;bottom:0;max-height:88vh;
-      background:linear-gradient(180deg,rgba(15,23,42,1),rgba(15,23,42,.98)); /* azul profundo */
+      background:linear-gradient(180deg,rgba(15,23,42,1),rgba(15,23,42,.98));
       border-top-left-radius:16px;border-top-right-radius:16px;border:1px solid rgba(255,255,255,.08);
       box-shadow:var(--shadow);transform:translateY(100%);transition:transform .25s ease
     }
@@ -96,10 +95,32 @@
     .panel .totals .line{display:flex;justify-content:space-between}
     .panel .totals .total{font-weight:800;font-size:16px;border-top:1px dashed rgba(255,255,255,.15);padding-top:8px;margin-top:4px}
 
-    /* WhatsApp (verde, se mantiene) */
+    /* WhatsApp (verde) */
     .btn-whatsapp{
       background:linear-gradient(180deg,#22c55e,#16a34a);
       display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:center
+    }
+
+    /* ==== SLIDERS (scroll-snap) ==== */
+    .rail-section{margin:4px 0 2px 0}
+    .rail-title{font-size:14px;line-height:1.2;color:var(--muted);font-weight:700;margin:6px 4px 8px 4px;letter-spacing:.2px}
+    .rail{
+      display:grid;
+      grid-auto-flow:column;
+      grid-auto-columns:74%;
+      gap:12px;
+      overflow-x:auto;
+      padding:4px 4px 14px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+    }
+    @media (min-width:480px){ .rail{grid-auto-columns:60%;} }
+    .rail::-webkit-scrollbar{height:6px}
+    .rail .product{scroll-snap-align:center}
+    .rail .product.is-active{
+      transform:scale(1.03);
+      border-color:rgba(96,165,250,.45);
+      box-shadow:0 8px 24px rgba(59,130,246,.15)
     }
 
     .muted.center{text-align:center}
@@ -117,19 +138,19 @@
   </header>
 
   <div class="wrap">
-    <!-- CATÁLOGO (Paso 1) -->
+    <!-- CATÁLOGO -->
     <section class="card products">
       <div class="title">Menú</div>
-      <div id="products" class="products-grid"></div>
+      <div id="products"></div>
     </section>
   </div>
 
-  <!-- FAB / Barra de pedido (aparece con items) -->
+  <!-- FAB / Barra de pedido -->
   <div id="fabCart" class="fab-cart" hidden>
     <button id="openSheet"><strong>Ver pedido</strong> (<span id="fabCount">0</span>) • <span id="fabTotal">$0.00</span></button>
   </div>
 
-  <!-- SHEET (Paso 2 - Carrito) -->
+  <!-- SHEET (Carrito) -->
   <div id="sheet" class="sheet" aria-hidden="true" role="dialog" aria-labelledby="sheetTitle">
     <div class="overlay" id="closeSheet"></div>
     <div class="panel">
@@ -208,15 +229,16 @@
 
   <script>
     /**
-     * ✅ FLUJO MÓVIL EN 2 PASOS + detalle
+     * ✅ Flujo:
+     * - 3 sliders: Cookies, Rolls, Cookie Pots (scroll-snap + realce del ítem centrado)
      * - “+1” agrega directo
-     * - “Agregar” abre sheet de detalle; desde ahí se agrega y se cierra
+     * - “Agregar” abre sheet de detalle
      */
 
     // ⚙️ CONFIGURACIÓN
     const STORE_NAME = "Choonkies";
     const CURRENCY = "USD";
-    const STORE_WHATSAPP = "593997339248"; // Reemplaza por tu número (sin +, sin espacios)
+    const STORE_WHATSAPP = "593997339248";
 
     // 🛍️ CATÁLOGO (con imágenes .jpg + ingredientes placeholder)
     const CATALOG = [
@@ -233,6 +255,13 @@
       { id:"roll-10", name:"Roll Oreo", price:1.50, color:"#111827", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-10-roll-oreo.jpg" },
       { id:"roll-12", name:"Cookies Pots", price:2.00, color:"#22c55e", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-12-cookies-pots.jpg" }
     ];
+
+    // Grupos para sliders
+    const GROUPS = {
+      cookies: ["roll-01","roll-02","roll-03","roll-04","roll-05","roll-11"],
+      rolls:   ["roll-06","roll-07","roll-08","roll-09","roll-10"],
+      pots:    ["roll-12"]
+    };
 
     // 🧠 Estado
     let cart = loadCart();
@@ -255,7 +284,6 @@
         const raw=localStorage.getItem("feria_cart_v2");
         if(!raw) return [];
         const data=JSON.parse(raw);
-        // hidrata luego de montar sheet
         setTimeout(()=>{
           if(data.customerName && document.querySelector('#customerName')) document.querySelector('#customerName').value=data.customerName;
           if(data.notes && document.querySelector('#notes')) document.querySelector('#notes').value=data.notes;
@@ -268,33 +296,94 @@
       }catch{return []}
     }
 
+    // Renderiza los 3 sliders
     function renderCatalog(){
-      const $grid=document.querySelector('#products');
-      $grid.innerHTML="";
-      CATALOG.forEach(prod=>{
-        const img=prod.img||svgPlaceholder(prod.name, prod.color);
-        const opts=(prod.options&&prod.options.length)?`<label class='muted' style='display:block;'>Variante</label><select data-id='${prod.id}' class='opt-select'>${prod.options.map(o=>`<option value='${o}'>${o}</option>`).join('')}</select>`:"";
-        const node=document.createElement('div');
-        node.className='product';
-        node.innerHTML=`<img src='${img}' alt='${prod.name}' loading='lazy' decoding='async'/><h3>${prod.name}</h3><div class='muted'>${fmt.format(prod.price)}</div>${opts}<div class='row'><button class='grow' data-add='${prod.id}'>Agregar</button><button class='btn-outline' data-addq='${prod.id}'>+1</button></div>`;
-        $grid.appendChild(node);
-      });
+      const $root=document.querySelector('#products');
+      $root.innerHTML="";
 
-      // Delegación de clics: "Agregar" abre detalle; "+1" agrega directo
-      $grid.addEventListener('click', (e)=>{
+      renderRail($root, "Cookies", GROUPS.cookies);
+      renderRail($root, "Rolls", GROUPS.rolls);
+      renderRail($root, "Cookie Pots", GROUPS.pots);
+
+      // Delegación de clics: “Agregar” abre detalle; “+1” agrega directo
+      $root.addEventListener('click', (e)=>{
         const addId = e.target.getAttribute('data-add');
         const plusId = e.target.getAttribute('data-addq');
-        if(addId){
-          openDetail(addId);
-          return;
-        }
+        if(addId){ openDetail(addId); return; }
         if(plusId){
           const prod=CATALOG.find(p=>p.id===plusId);
           if(!prod) return;
-          const sel=e.target.closest('.product')?.querySelector('.opt-select');
-          addToCart(prod, sel?sel.value:null);
+          addToCart(prod, null);
         }
       });
+    }
+
+    function renderRail(root, title, ids){
+      const section = document.createElement('div');
+      section.className = "rail-section";
+      section.innerHTML = `<div class="rail-title">${title}</div><div class="rail"></div>`;
+      root.appendChild(section);
+
+      const rail = section.querySelector('.rail');
+
+      ids.forEach(id=>{
+        const prod = CATALOG.find(p=>p.id===id);
+        if(!prod) return;
+        const img=prod.img||svgPlaceholder(prod.name, prod.color);
+        const node=document.createElement('div');
+        node.className='product';
+        node.innerHTML=`
+          <img src="${img}" alt="${prod.name}" loading="lazy" decoding="async"/>
+          <h3>${prod.name}</h3>
+          <div class='muted'>${fmt.format(prod.price)}</div>
+          <div class='row'>
+            <button class='grow' data-add='${prod.id}'>Agregar</button>
+            <button class='btn-outline' data-addq='${prod.id}'>+1</button>
+          </div>`;
+        rail.appendChild(node);
+      });
+
+      setupRailActiveState(rail);
+    }
+
+    // Marca el ítem más centrado como activo (escala suave)
+    function setupRailActiveState(rail){
+      const cards = [...rail.querySelectorAll('.product')];
+      if(!cards.length) return;
+      const setActive = (el)=> cards.forEach(c=>c.classList.toggle('is-active', c===el));
+
+      // IO para marcar visibles con mayor intersección
+      const io = new IntersectionObserver((entries)=>{
+        let best=null, max=0;
+        for(const en of entries){
+          if(en.intersectionRatio > max){ max = en.intersectionRatio; best = en.target; }
+        }
+        if(best && max>0.5) setActive(best);
+      }, {root: rail, threshold:[0.5,0.75,1]});
+      cards.forEach(c=>io.observe(c));
+
+      // Fallback con centro geométrico (suave con rAF)
+      let ticking=false;
+      rail.addEventListener('scroll', ()=>{
+        if(ticking) return;
+        ticking = true;
+        requestAnimationFrame(()=>{
+          const r = rail.getBoundingClientRect();
+          const center = r.left + r.width/2;
+          let best=null, dist=1e9;
+          cards.forEach(c=>{
+            const cr=c.getBoundingClientRect();
+            const cc=cr.left + cr.width/2;
+            const d=Math.abs(cc-center);
+            if(d<dist){ dist=d; best=c; }
+          });
+          if(best) setActive(best);
+          ticking=false;
+        });
+      });
+
+      // Estado inicial
+      setActive(cards[0]);
     }
 
     function addToCart(product, option=null){
@@ -342,13 +431,10 @@
       const discounts=0;
       const total=Math.max(0, subtotal-discounts);
 
-      // Top badge
       if($countTop) $countTop.textContent=String(itemCount);
 
-      // FAB visibility
       if(itemCount>0){ $fab.hidden=false; $fabCount.textContent=String(itemCount); $fabTotal.textContent=fmt.format(total); } else { $fab.hidden=true; }
 
-      // Sheet content
       if(!itemCount){
         $empty.style.display='block';
         $list.style.display='none';
@@ -374,7 +460,7 @@
       saveCart();
     }
 
-    // 🧾 Mensaje WhatsApp
+    // 🧾 WhatsApp
     function buildWhatsAppMessage(){
       const name=(document.querySelector('#customerName').value||'').trim();
       const delivery=(document.querySelector('input[name="delivery"]:checked').value)||'Recoger en stand';
@@ -424,14 +510,12 @@
       if(!prod) return;
       currentProductId = productId;
 
-      // Pinta datos
       detailImg.src = prod.img || svgPlaceholder(prod.name, prod.color);
       detailImg.alt = prod.name;
       detailName.textContent = prod.name;
       detailPrice.textContent = fmt.format(prod.price);
       detailIngredients.textContent = prod.ingredients || "Galleta hecha de masa de galleta";
 
-      // Abre
       detailSheet.classList.add('open');
       detailSheet.setAttribute('aria-hidden','false');
     }
