@@ -24,8 +24,7 @@
       /* 🚫 sin scroll horizontal global */
       overflow-x:hidden;
       overscroll-behavior-x:none;
-      /* ✅ permite scroll vertical en toda la página */
-      touch-action:pan-y;
+      /* ❌ QUITADO: touch-action:pan-y;  (esto pegaba el scroll en iOS) */
     }
     body{
       margin:0;
@@ -136,9 +135,8 @@
       padding:4px 4px 14px;
       scroll-snap-type:x mandatory;
       -webkit-overflow-scrolling:touch;
-      /* ✅ horizontal dentro del slider + vertical para la página */
-      touch-action:pan-x pan-y;
-      overscroll-behavior-x:contain;
+      /* ❌ QUITADO: touch-action en el rail (Safari lo interpretaba mal) */
+      /* overscroll-behavior-x:contain;  ← opcional; puedes dejarlo o quitarlo */
     }
     @media (min-width:480px){ .rail{grid-auto-columns:60%;} }
     .rail::-webkit-scrollbar{height:6px}
