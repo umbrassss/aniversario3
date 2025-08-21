@@ -259,12 +259,12 @@
      * - Validación de nombre antes de WhatsApp
      */
 
-    // ⚙ CONFIGURACIÓN
+    // ⚙️ CONFIGURACIÓN
     const STORE_NAME = "Choonkies";
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248";
 
-    // 🛍 CATÁLOGO (con imágenes .jpg + ingredientes placeholder)
+    // 🛍️ CATÁLOGO (con imágenes .jpg + ingredientes placeholder)
     const CATALOG = [
       { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
       { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", ingredients:"Galleta hecha de masa de galleta", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
@@ -295,7 +295,7 @@
     const fmt = new Intl.NumberFormat("es-EC", { style:"currency", currency:CURRENCY, minimumFractionDigits:2 });
     function svgPlaceholder(label, color="#111827"){
       const safe=(s)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
-      const svg=<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0%' stop-color='${color}' stop-opacity='.9'/><stop offset='100%' stop-color='${color}' stop-opacity='.6'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><g fill='white' fill-opacity='.08'><circle cx='100' cy='80' r='50'/><circle cx='720' cy='520' r='70'/><rect x='40' y='500' width='180' height='60' rx='12'/></g><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='40' fill='white' fill-opacity='.9'>${safe(label)}</text></svg>;
+      const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0%' stop-color='${color}' stop-opacity='.9'/><stop offset='100%' stop-color='${color}' stop-opacity='.6'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><g fill='white' fill-opacity='.08'><circle cx='100' cy='80' r='50'/><circle cx='720' cy='520' r='70'/><rect x='40' y='500' width='180' height='60' rx='12'/></g><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='40' fill='white' fill-opacity='.9'>${safe(label)}</text></svg>`;
       return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg)));
     }
 
@@ -345,7 +345,7 @@
     function renderRail(root, title, ids){
       const section = document.createElement('div');
       section.className = "rail-section";
-      section.innerHTML = <div class="rail-title">${title}</div><div class="rail-wrap"><div class="rail"></div></div>;
+      section.innerHTML = `<div class="rail-title">${title}</div><div class="rail-wrap"><div class="rail"></div></div>`;
       root.appendChild(section);
 
       const rail = section.querySelector('.rail');
@@ -441,7 +441,7 @@
     }
 
     function addToCart(product, option=null){
-      const key=product.id+(option?__${option}:"");
+      const key=product.id+(option?`__${option}`:"");
       const existing=cart.find(i=>i.key===key);
       if(existing){ existing.qty+=1; } else {
         cart.push({ key, id:product.id, name:product.name, option, price:product.price, img:product.img||svgPlaceholder(product.name, product.color), qty:1 });
@@ -503,7 +503,7 @@
         cart.forEach(item=>{
           const node=document.createElement('div');
           node.className='cart-item';
-          node.innerHTML=<img src='${item.img}' alt='${item.name}'/><div><div style='font-weight:700;font-size:14px'>${item.name}${item.option? — ${item.option}:''}</div><div class='muted'>${fmt.format(item.price)} c/u</div></div><div style='display:flex;align-items:center;gap:8px;'><div class='qty'><button aria-label='Menos' onclick="changeQty('${item.key}',-1)">−</button><input aria-label='Cantidad' type='number' min='1' value='${item.qty}' oninput="setQty('${item.key}', this.value)"/><button aria-label='Más' onclick="changeQty('${item.key}',1)">+</button></div><button class='btn-outline' style='border-color:rgba(239,68,68,.55);' aria-label='Eliminar' onclick="removeItem('${item.key}')">✕</button></div>;
+          node.innerHTML=`<img src='${item.img}' alt='${item.name}'/><div><div style='font-weight:700;font-size:14px'>${item.name}${item.option?` — ${item.option}`:''}</div><div class='muted'>${fmt.format(item.price)} c/u</div></div><div style='display:flex;align-items:center;gap:8px;'><div class='qty'><button aria-label='Menos' onclick="changeQty('${item.key}',-1)">−</button><input aria-label='Cantidad' type='number' min='1' value='${item.qty}' oninput="setQty('${item.key}', this.value)"/><button aria-label='Más' onclick="changeQty('${item.key}',1)">+</button></div><button class='btn-outline' style='border-color:rgba(239,68,68,.55);' aria-label='Eliminar' onclick="removeItem('${item.key}')">✕</button></div>`;
           $list.appendChild(node);
         });
       }
@@ -522,16 +522,16 @@
       let subtotal=0;
       const lines=cart.map(i=>{
         const line=i.price*i.qty; subtotal+=line;
-        return • ${i.qty}× ${i.name}${i.option? — ${i.option}:''} — ${fmt.format(line)};
+        return `• ${i.qty}× ${i.name}${i.option?` — ${i.option}`:''} — ${fmt.format(line)}`;
       }).join('\n');
-      const header=*Pedido ${STORE_NAME?('— '+STORE_NAME):''}*;
-      const cliente=name?\nCliente: ${name}:'';
-      const body=\n\n${lines};
-      const entrega=\n\nEntrega: ${delivery};
-      const notas=notes?\nNotas: ${notes}:'';
-      const total=\n\nTotal: ${fmt.format(subtotal)};
-      const thanks=\n\n¡Gracias!;
-      return ${header}${cliente}${body}${entrega}${notas}${total}${thanks};
+      const header=`*Pedido ${STORE_NAME?('— '+STORE_NAME):''}*`;
+      const cliente=name?`\nCliente: ${name}`:'';
+      const body=`\n\n${lines}`;
+      const entrega=`\n\nEntrega: ${delivery}`;
+      const notas=notes?`\nNotas: ${notes}`:'';
+      const total=`\n\nTotal: ${fmt.format(subtotal)}`;
+      const thanks=`\n\n¡Gracias!`;
+      return `${header}${cliente}${body}${entrega}${notas}${total}${thanks}`;
     }
     function goWhatsApp(){
       if(!cart.length) return;
@@ -547,11 +547,11 @@
       }
 
       const msg=buildWhatsAppMessage();
-      const url=https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)};
+      const url=`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)}`;
       window.open(url,'_blank');
     }
 
-    // 🎛 Sheet Carrito
+    // 🎛️ Sheet Carrito
     const sheet=document.querySelector('#sheet');
     const openSheetBtn=document.querySelector('#openSheet');
     const closeSheetBtn=document.querySelector('#closeSheetBtn');
@@ -617,7 +617,7 @@
     renderCatalog();
     renderCart();
 
-    if(STORE_NAME){ document.title = Carrito — ${STORE_NAME}; }
+    if(STORE_NAME){ document.title = `Carrito — ${STORE_NAME}`; }
   </script>
 </body>
 </html>
