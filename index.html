@@ -36,7 +36,6 @@
     }
     .head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px}
     .brand{font-weight:800;letter-spacing:.3px}
-    .sub{color:var(--muted);font-size:12px}
 
     .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow)}
     .products{padding:10px}
@@ -123,16 +122,17 @@
       box-shadow:0 8px 24px rgba(59,130,246,.15)
     }
 
+    /* Validación nombre */
+    .input-error{border-color:rgba(239,68,68,.9)!important; box-shadow:0 0 0 3px rgba(239,68,68,.15) inset}
+    .error-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none}
+
     .muted.center{text-align:center}
   </style>
 </head>
 <body>
   <header>
     <div class="head">
-      <div>
-        <div class="brand">Choonkies Store</div>
-        <div class="sub">Choonkies Store</div>
-      </div>
+      <div class="brand">Choonkies</div>
       <span id="cartCount" class="badge">0</span>
     </div>
   </header>
@@ -172,6 +172,8 @@
             <label for="customerName" style="font-weight:700;">Nombre del cliente</label>
             <input id="customerName" type="text" placeholder="Tu nombre" />
             <div class="sub">Lo incluiremos en el mensaje de WhatsApp.</div>
+            <div id="nameError" class="error-msg">El nombre es obligatorio.</div>
+
             <label style="font-weight:700;">Entrega</label>
             <div class="row" role="radiogroup" aria-label="Método de entrega" style="flex-wrap:wrap;gap:10px;">
               <label style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;cursor:pointer"><input type="radio" name="delivery" value="Recoger en stand" checked>Recoger en stand</label>
@@ -233,6 +235,7 @@
      * - 3 sliders: Cookies, Rolls, Cookie Pots (scroll-snap + realce del ítem centrado)
      * - “+1” agrega directo
      * - “Agregar” abre sheet de detalle
+     * - Validación: nombre obligatorio antes de enviar a WhatsApp
      */
 
     // ⚙️ CONFIGURACIÓN
@@ -352,7 +355,6 @@
       if(!cards.length) return;
       const setActive = (el)=> cards.forEach(c=>c.classList.toggle('is-active', c===el));
 
-      // IO para marcar visibles con mayor intersección
       const io = new IntersectionObserver((entries)=>{
         let best=null, max=0;
         for(const en of entries){
@@ -362,7 +364,6 @@
       }, {root: rail, threshold:[0.5,0.75,1]});
       cards.forEach(c=>io.observe(c));
 
-      // Fallback con centro geométrico (suave con rAF)
       let ticking=false;
       rail.addEventListener('scroll', ()=>{
         if(ticking) return;
@@ -382,7 +383,6 @@
         });
       });
 
-      // Estado inicial
       setActive(cards[0]);
     }
 
@@ -460,7 +460,7 @@
       saveCart();
     }
 
-    // 🧾 WhatsApp
+    // 🧾 WhatsApp (con validación de nombre)
     function buildWhatsAppMessage(){
       const name=(document.querySelector('#customerName').value||'').trim();
       const delivery=(document.querySelector('input[name="delivery"]:checked').value)||'Recoger en stand';
@@ -481,6 +481,17 @@
     }
     function goWhatsApp(){
       if(!cart.length) return;
+
+      const nameEl = document.querySelector('#customerName');
+      const errEl = document.querySelector('#nameError');
+      if(!nameEl.value.trim()){
+        nameEl.classList.add('input-error');
+        if(errEl){ errEl.style.display='block'; }
+        nameEl.focus({preventScroll:true});
+        nameEl.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+
       const msg=buildWhatsAppMessage();
       const url=`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)}`;
       window.open(url,'_blank');
@@ -536,8 +547,16 @@
     closeDetailOverlay.addEventListener('click', closeDetail);
     detailAddBtn.addEventListener('click', addCurrentToCart);
 
+    // Guardado + limpieza de error al tipear nombre/notas
     document.querySelector('#btnWhatsApp').addEventListener('click', goWhatsApp);
-    document.addEventListener('input', (e)=>{ if(e.target.id==='customerName'||e.target.id==='notes') saveCart(); });
+    document.addEventListener('input', (e)=>{
+      if(e.target.id==='customerName'){
+        e.target.classList.remove('input-error');
+        const errEl = document.querySelector('#nameError');
+        if(errEl) errEl.style.display='none';
+      }
+      if(e.target.id==='customerName'||e.target.id==='notes') saveCart();
+    });
     document.addEventListener('change', (e)=>{ if(e.target.name==='delivery') saveCart(); });
 
     // Render inicial
