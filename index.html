@@ -20,11 +20,16 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
+    /* Evita el rebote/overscroll y el "fondo blanco" en bordes */
+    html, body{overscroll-behavior-y:none}
+    html{background:#0b1220}
+
     body{
       margin:0;
       background:linear-gradient(180deg,#0a0f1a,var(--bg));
       color:var(--text);
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;
+      min-height:100svh;
     }
     .wrap{max-width:560px;margin:0 auto;padding:12px 14px 90px}
 
@@ -251,12 +256,7 @@
 
   <script>
     /**
-     * Cambios:
-     * - Sliders con primer ítem centrado (y activo) al cargar
-     * - Fades en los bordes izquierdo/derecho
-     * - Título 3 = "Pots"; producto roll-12 = "Cookie Pot"
-     * - “+1” agrega directo; “Agregar” abre detalle
-     * - Validación de nombre antes de WhatsApp
+     * Catálogo + sliders + validación + bloqueo de overscroll vertical
      */
 
     // ⚙️ CONFIGURACIÓN
@@ -264,7 +264,7 @@
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248";
 
-    // 🛍️ CATÁLOGO (con imágenes .jpg + ingredientes actualizados)
+    // 🛍️ CATÁLOGO (ingredientes actualizados)
     const CATALOG = [
       { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", ingredients:"Galleta de vainilla con chispas de chocolate y relleno de Nutella", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
       { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", ingredients:"Galleta de vainilla con trozos de galleta oreo y relleno de Nutella", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
@@ -368,22 +368,19 @@
         rail.appendChild(node);
       });
 
-      // Estado activo + fades + centrado inicial
+      // Activo + fades + centrado inicial
       setupRailActiveState(rail);
       if(ids.length === 1){
         rail.classList.add('rail--single');
         wrap.classList.add('single');
       }else{
-        requestAnimationFrame(()=>{
-          centerFirstCard(rail);
-        });
+        requestAnimationFrame(()=>{ centerFirstCard(rail); });
       }
       updateRailFades(rail);
       rail.addEventListener('scroll', ()=>updateRailFades(rail), {passive:true});
       window.addEventListener('resize', ()=>centerFirstCard(rail));
     }
 
-    // Marca el ítem más centrado como activo
     function setupRailActiveState(rail){
       const cards = [...rail.querySelectorAll('.product')];
       if(!cards.length) return;
@@ -420,7 +417,6 @@
       setActive(cards[0]);
     }
 
-    // Centra el primer elemento del rail
     function centerFirstCard(rail){
       const first = rail.querySelector('.product');
       if(!first || rail.classList.contains('rail--single')) return;
@@ -428,7 +424,6 @@
       rail.scrollLeft = Math.max(0, offset);
     }
 
-    // Controla la visibilidad de los fades de bordes
     function updateRailFades(rail){
       const wrap = rail.parentElement;
       if(!wrap || !wrap.classList.contains('rail-wrap')) return;
@@ -610,10 +605,63 @@
     });
     document.addEventListener('change', (e)=>{ if(e.target.name==='delivery') saveCart(); });
 
+    // ===== Bloqueo de overscroll (rebote) en extremos =====
+    let startY=0, startX=0, activeScrollable=null;
+
+    function getScrollableParent(el){
+      while(el && el !== document.body){
+        const cs = getComputedStyle(el);
+        const oy = cs.overflowY;
+        if((oy==='auto' || oy==='scroll') && el.scrollHeight > el.clientHeight){
+          return el;
+        }
+        el = el.parentElement;
+      }
+      return null;
+    }
+
+    document.addEventListener('touchstart',(e)=>{
+      if(!e.touches || !e.touches.length) return;
+      const t = e.touches[0];
+      startY = t.clientY;
+      startX = t.clientX;
+      activeScrollable = getScrollableParent(e.target);
+    }, {passive:true});
+
+    document.addEventListener('touchmove',(e)=>{
+      if(!e.touches || !e.touches.length) return;
+      const t = e.touches[0];
+      const dy = t.clientY - startY;
+      const dx = t.clientX - startX;
+
+      // No bloquear gestos predominantemente horizontales (para los sliders)
+      if(Math.abs(dx) > Math.abs(dy)) return;
+
+      // Si estamos dentro de un contenedor con scroll vertical (p.ej. sheet)
+      if(activeScrollable){
+        const el = activeScrollable;
+        const atTop = el.scrollTop <= 0;
+        const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+        if((atTop && dy > 0) || (atBottom && dy < 0)){
+          e.preventDefault();
+        }
+        return;
+      }
+
+      // Scroll del viewport (página)
+      const atTop = window.scrollY <= 0;
+      const atBottom = (window.innerHeight + Math.round(window.scrollY)) >= (document.documentElement.scrollHeight - 1);
+      if((atTop && dy > 0) || (atBottom && dy < 0)){
+        e.preventDefault();
+      }
+    }, {passive:false});
+
+    document.addEventListener('touchend', ()=>{ activeScrollable=null; }, {passive:true});
+    document.addEventListener('touchcancel', ()=>{ activeScrollable=null; }, {passive:true});
+
     // Render inicial
     renderCatalog();
     renderCart();
-
     if(STORE_NAME){ document.title = `Carrito — ${STORE_NAME}`; }
   </script>
 </body>
