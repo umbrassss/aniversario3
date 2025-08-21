@@ -19,7 +19,14 @@
       --radius:16px
     }
     *{box-sizing:border-box}
-    html,body{height:100%; overscroll-behavior-y:none;}
+    html,body{
+      height:100%;
+      overscroll-behavior-y:none;
+      /* 🔒 Bloquea “gutter” horizontal fuera del slider */
+      overflow-x:hidden;
+      overscroll-behavior-x:none;
+      touch-action:pan-y;
+    }
     body{
       margin:0;
       background:linear-gradient(180deg,#0a0f1a,var(--bg));
@@ -129,6 +136,9 @@
       padding:4px 4px 14px;
       scroll-snap-type:x mandatory;
       -webkit-overflow-scrolling:touch;
+      /* ✅ Permite pan horizontal SOLO dentro del slider */
+      touch-action:pan-x;
+      overscroll-behavior-x:contain;
     }
     @media (min-width:480px){ .rail{grid-auto-columns:60%;} }
     .rail::-webkit-scrollbar{height:6px}
@@ -152,7 +162,6 @@
       position:fixed; inset:0; z-index:100;
       display:grid; place-items:center;
       background:linear-gradient(180deg,#0a0f1a,var(--bg));
-      /* se desvanece al final de la animación del logo */
       pointer-events:auto;
     }
     .splash__logo{
@@ -288,6 +297,8 @@
      * - "+1" agrega directo; "Agregar" abre detalle
      * - Validación de nombre antes de WhatsApp
      * - Bloqueo de scroll mientras haya paneles abiertos
+     * - 🔁 FAB sincronizado al eliminar productos
+     * - 🚫 Sin “gutter” horizontal fuera del slider
      */
 
     // ⚙️ CONFIGURACIÓN
@@ -295,7 +306,7 @@
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248";
 
-    // 🛍️ CATÁLOGO (ingredientes placeholder por ahora)
+    // 🛍️ CATÁLOGO (ingredientes actualizados)
     const CATALOG = [
       { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", ingredients:"Galleta de vainilla con chispas de chocolate y relleno de Nutella", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
       { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", ingredients:"Galleta de vainilla con trozos de galleta oreo y relleno de Nutella", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
@@ -513,7 +524,22 @@
 
       if($countTop) $countTop.textContent=String(itemCount);
 
-      if(itemCount>0){ $fab.hidden=false; $fabCount.textContent=String(itemCount); $fabTotal.textContent=fmt.format(total); } else { $fab.hidden=true; }
+      if(itemCount>0){
+        $fab.hidden=false;
+        if($fabCount) $fabCount.textContent=String(itemCount);
+        if($fabTotal) $fabTotal.textContent=fmt.format(total);
+      } else {
+        // 🧹 Sin items: cierra sheet, desbloquea scroll, oculta y resetea FAB
+        const sheet=document.querySelector('#sheet');
+        if(sheet && sheet.classList.contains('open')){
+          sheet.classList.remove('open');
+          sheet.setAttribute('aria-hidden','true');
+          unlockScroll();
+        }
+        if($fabCount) $fabCount.textContent="0";
+        if($fabTotal) $fabTotal.textContent=fmt.format(0);
+        $fab.hidden=true;
+      }
 
       if(!itemCount){
         $empty.style.display='block';
@@ -583,8 +609,8 @@
     const closeSheetBtn=document.querySelector('#closeSheetBtn');
     const closeSheetOverlay=document.querySelector('#closeSheet');
     openSheetBtn.addEventListener('click', ()=>{ sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false'); lockScroll(); });
-    closeSheetBtn.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); unlockScroll(); });
-    closeSheetOverlay.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); unlockScroll(); });
+    closeSheetBtn.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); unlockScroll(); renderCart(); });
+    closeSheetOverlay.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); unlockScroll(); renderCart(); });
 
     // 🆕 Sheet Detalle (también bloquea scroll)
     const detailSheet=document.querySelector('#detailSheet');
@@ -616,6 +642,7 @@
       detailSheet.setAttribute('aria-hidden','true');
       currentProductId = null;
       unlockScroll();
+      renderCart(); // por si se agregó desde el detalle
     }
     function addCurrentToCart(){
       if(!currentProductId) return;
@@ -648,8 +675,7 @@
       lockScroll(); // bloquea mientras corre la animación
       const endSplash = ()=>{ splash.style.display='none'; unlockScroll(); };
       splashLogo.addEventListener('animationend', endSplash, {once:true});
-      // fallback por si algo interrumpe la animación
-      setTimeout(endSplash, 2500);
+      setTimeout(endSplash, 2500); // fallback
     }
 
     // Render inicial
