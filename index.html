@@ -295,12 +295,16 @@
   </div>
 
   <script>
+    // Helpers seguros
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
+
     // Config
     const STORE_NAME = "Choonkies";
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248";
 
-    // 🚫 IDs ocultos (fácil de volver a mostrar quitándolos del Set)
+    // IDs ocultos (volver a mostrar quitándolos del Set)
     const HIDDEN_IDS = new Set(["roll-08","roll-12"]); // Roll Brownie, Cookie Pot
 
     const CATALOG = [
@@ -332,13 +336,13 @@
 
     const fmt = new Intl.NumberFormat("es-EC", { style:"currency", currency:CURRENCY, minimumFractionDigits:2 });
     function svgPlaceholder(label, color="#111827"){
-      const safe=(s)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+      const safe=(s)=>s.replace(/&/g,"&amp;").replace(/<//g,"&lt;");
       const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0%' stop-color='${color}' stop-opacity='.9'/><stop offset='100%' stop-color='${color}' stop-opacity='.6'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><g fill='white' fill-opacity='.08'><circle cx='100' cy='80' r='50'/><circle cx='720' cy='520' r='70'/><rect x='40' y='500' width='180' height='60' rx='12'/></g><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='40' fill='white' fill-opacity='.9'>${safe(label)}</text></svg>`;
       return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg)));
     }
 
     function saveCart(){
-      const payload={ cart, customerName:document.querySelector('#customerName').value||"", notes:document.querySelector('#notes').value||"", delivery:(document.querySelector('input[name="delivery"]:checked').value)||"Recoger en stand" };
+      const payload={ cart, customerName:$('#customerName')?.value||"", notes:$('#notes')?.value||"", delivery:($('input[name="delivery"]:checked')?.value)||"Recoger en stand" };
       localStorage.setItem("feria_cart_v2", JSON.stringify(payload));
     }
     function loadCart(){
@@ -347,8 +351,8 @@
         if(!raw) return [];
         const data=JSON.parse(raw);
         setTimeout(()=>{
-          if(data.customerName && document.querySelector('#customerName')) document.querySelector('#customerName').value=data.customerName;
-          if(data.notes && document.querySelector('#notes')) document.querySelector('#notes').value=data.notes;
+          if(data.customerName && $('#customerName')) $('#customerName').value=data.customerName;
+          if(data.notes && $('#notes')) $('#notes').value=data.notes;
           if(data.delivery){
             const r=[...document.querySelectorAll('input[name="delivery"]')].find(x=>x.value===data.delivery);
             if(r) r.checked=true;
@@ -359,16 +363,19 @@
     }
 
     function renderCatalog(){
-      const $root=document.querySelector('#products');
+      const $root=$('#products');
+      if(!$root) return;
       $root.innerHTML="";
 
       renderRail($root, "Cookies", GROUPS.cookies);
       renderRail($root, "Rolls", GROUPS.rolls);
       renderRail($root, "Pots", GROUPS.pots);
 
-      $root.addEventListener('click', (e)=>{
-        const addId = e.target.getAttribute('data-add');
-        const plusId = e.target.getAttribute('data-addq');
+      on($root, 'click', (e)=>{
+        const t = e.target.closest('button');
+        if(!t) return;
+        const addId = t.getAttribute('data-add');
+        const plusId = t.getAttribute('data-addq');
         if(addId){ openDetail(addId); return; }
         if(plusId){
           const prod=CATALOG.find(p=>p.id===plusId);
@@ -384,9 +391,8 @@
     }
 
     function renderRail(root, title, ids){
-      // 🔎 Filtra elementos ocultos
       const visibleIds = ids.filter(id => !HIDDEN_IDS.has(id));
-      if(visibleIds.length === 0) return; // si no hay, no renderiza la sección
+      if(visibleIds.length === 0) return;
 
       const section = document.createElement('div');
       section.className = "rail-section";
@@ -433,23 +439,23 @@
       updateRailFades(rail);
       updateRailArrows(rail, wrap, leftBtn, rightBtn);
 
-      rail.addEventListener('scroll', ()=>{
+      on(rail, 'scroll', ()=>{
         updateRailFades(rail);
         updateRailArrows(rail, wrap, leftBtn, rightBtn);
       }, {passive:true});
-      window.addEventListener('resize', ()=>{
+      on(window, 'resize', ()=>{
         centerFirstCard(rail);
         updateRailArrows(rail, wrap, leftBtn, rightBtn);
       });
 
       const stepBy = (dir)=>{
         const card = rail.querySelector('.product');
-        const gap = parseFloat(getComputedStyle(rail).columnGap) || 12;
+        const gap = parseFloat(getComputedStyle(rail).getPropertyValue('column-gap')) || 12;
         const step = card ? (card.clientWidth + gap) : Math.max(160, rail.clientWidth * 0.6);
         rail.scrollBy({ left: dir * step, behavior: 'smooth' });
       };
-      leftBtn.addEventListener('click', ()=>stepBy(-1));
-      rightBtn.addEventListener('click', ()=>stepBy(1));
+      on(leftBtn, 'click', ()=>stepBy(-1));
+      on(rightBtn, 'click', ()=>stepBy(1));
     }
 
     function updateRailArrows(rail, wrap, leftBtn, rightBtn){
@@ -473,17 +479,19 @@
       if(!cards.length) return;
       const setActive = (el)=> cards.forEach(c=>c.classList.toggle('is-active', c===el));
 
-      const io = new IntersectionObserver((entries)=>{
-        let best=null, max=0;
-        for(const en of entries){
-          if(en.intersectionRatio > max){ max = en.intersectionRatio; best = en.target; }
-        }
-        if(best && max>0.5) setActive(best);
-      }, {root: rail, threshold:[0.5,0.75,1]});
-      cards.forEach(c=>io.observe(c));
+      if('IntersectionObserver' in window){
+        const io = new IntersectionObserver((entries)=>{
+          let best=null, max=0;
+          for(const en of entries){
+            if(en.intersectionRatio > max){ max = en.intersectionRatio; best = en.target; }
+          }
+          if(best && max>0.5) setActive(best);
+        }, {root: rail, threshold:[0.5,0.75,1]});
+        cards.forEach(c=>io.observe(c));
+      }
 
       let ticking=false;
-      rail.addEventListener('scroll', ()=>{
+      on(rail, 'scroll', ()=>{
         if(ticking) return;
         ticking = true;
         requestAnimationFrame(()=>{
@@ -547,17 +555,17 @@
     }
 
     function renderCart(){
-      const $fab=document.querySelector('#fabCart');
-      const $fabCount=document.querySelector('#fabCount');
-      const $fabTotal=document.querySelector('#fabTotal');
-      const $countTop=document.querySelector('#cartCount');
-      const $list=document.querySelector('#sheetList');
-      const $empty=document.querySelector('#sheetEmpty');
-      const $forms=document.querySelector('#sheetForms');
-      const $subtotal=document.querySelector('#subtotal');
-      const $discounts=document.querySelector('#discounts');
-      const $total=document.querySelector('#total');
-      const $btn=document.querySelector('#btnWhatsApp');
+      const $fab=$('#fabCart');
+      const $fabCount=$('#fabCount');
+      const $fabTotal=$('#fabTotal');
+      const $countTop=$('#cartCount');
+      const $list=$('#sheetList');
+      const $empty=$('#sheetEmpty');
+      const $forms=$('#sheetForms');
+      const $subtotal=$('#subtotal');
+      const $discounts=$('#discounts');
+      const $total=$('#total');
+      const $btn=$('#btnWhatsApp');
 
       const itemCount=cart.reduce((a,b)=>a+b.qty,0);
       let subtotal=0; cart.forEach(i=>subtotal+=i.price*i.qty);
@@ -567,14 +575,16 @@
       if($countTop) $countTop.textContent=String(itemCount);
 
       if(itemCount>0){
-        $fab.hidden=false;
+        if($fab) $fab.hidden=false;
         if($fabCount) $fabCount.textContent=String(itemCount);
         if($fabTotal) $fabTotal.textContent=fmt.format(total);
       } else {
         if($fabCount) $fabCount.textContent="0";
         if($fabTotal) $fabTotal.textContent=fmt.format(0);
-        $fab.hidden=true;
+        if($fab) $fab.hidden=true;
       }
+
+      if(!$list || !$empty || !$forms || !$btn || !$subtotal || !$discounts || !$total) return;
 
       if(!itemCount){
         $empty.style.display='block';
@@ -602,9 +612,9 @@
     }
 
     function buildWhatsAppMessage(){
-      const name=(document.querySelector('#customerName').value||'').trim();
-      const delivery=(document.querySelector('input[name="delivery"]:checked').value)||'Recoger en stand';
-      const notes=(document.querySelector('#notes').value||'').trim();
+      const name=($('#customerName')?.value||'').trim();
+      const delivery=($('input[name="delivery"]:checked')?.value)||'Recoger en stand';
+      const notes=($('#notes')?.value||'').trim();
       let subtotal=0;
       const lines=cart.map(i=>{
         const line=i.price*i.qty; subtotal+=line;
@@ -622,9 +632,9 @@
     function goWhatsApp(){
       if(!cart.length) return;
 
-      const nameEl = document.querySelector('#customerName');
-      const errEl = document.querySelector('#nameError');
-      if(!nameEl.value.trim()){
+      const nameEl = $('#customerName');
+      const errEl = $('#nameError');
+      if(nameEl && !nameEl.value.trim()){
         nameEl.classList.add('input-error');
         if(errEl){ errEl.style.display='block'; }
         nameEl.focus({preventScroll:true});
@@ -638,42 +648,41 @@
     }
 
     // Sheet Carrito
-    const sheet=document.querySelector('#sheet');
-    const openSheetBtn=document.querySelector('#openSheet');
-    const closeSheetBtn=document.querySelector('#closeSheetBtn');
-    const closeSheetOverlay=document.querySelector('#closeSheet');
-    openSheetBtn.addEventListener('click', ()=>{ sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false'); lockScroll(); });
-    closeSheetBtn.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); unlockScroll(); renderCart(); });
-    closeSheetOverlay.addEventListener('click', ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); unlockScroll(); renderCart(); });
+    const sheet=$('#sheet');
+    const openSheetBtn=$('#openSheet');
+    const closeSheetBtn=$('#closeSheetBtn');
+    const closeSheetOverlay=$('#closeSheet');
+    on(openSheetBtn,'click', ()=>{ sheet?.classList.add('open'); sheet?.setAttribute('aria-hidden','false'); lockScroll(); });
+    on(closeSheetBtn,'click', ()=>{ sheet?.classList.remove('open'); sheet?.setAttribute('aria-hidden','true'); unlockScroll(); renderCart(); });
+    on(closeSheetOverlay,'click', ()=>{ sheet?.classList.remove('open'); sheet?.setAttribute('aria-hidden','true'); unlockScroll(); renderCart(); });
 
     // Sheet Detalle
-    const detailSheet=document.querySelector('#detailSheet');
-    const closeDetailBtn=document.querySelector('#closeDetailBtn');
-    const closeDetailOverlay=document.querySelector('#closeDetail');
-    const detailAddBtn=document.querySelector('#detailAddBtn');
-    const detailImg=document.querySelector('#detailImg');
-    const detailName=document.querySelector('#detailName');
-    const detailPrice=document.querySelector('#detailPrice');
-    const detailIngredients=document.querySelector('#detailIngredients']);
+    const detailSheet=$('#detailSheet');
+    const closeDetailBtn=$('#closeDetailBtn');
+    const closeDetailOverlay=$('#closeDetail');
+    const detailAddBtn=$('#detailAddBtn');
+    const detailImg=$('#detailImg');
+    const detailName=$('#detailName');
+    const detailPrice=$('#detailPrice');
+    const detailIngredients=$('#detailIngredients');
 
     function openDetail(productId){
       const prod = CATALOG.find(p=>p.id===productId);
       if(!prod) return;
       currentProductId = productId;
 
-      detailImg.src = prod.img || svgPlaceholder(prod.name, prod.color);
-      detailImg.alt = prod.name;
-      detailName.textContent = prod.name;
-      detailPrice.textContent = fmt.format(prod.price);
-      detailIngredients.textContent = prod.ingredients || "Galleta hecha de masa de galleta";
+      if(detailImg){ detailImg.src = prod.img || svgPlaceholder(prod.name, prod.color); detailImg.alt = prod.name; }
+      if(detailName){ detailName.textContent = prod.name; }
+      if(detailPrice){ detailPrice.textContent = fmt.format(prod.price); }
+      if(detailIngredients){ detailIngredients.textContent = prod.ingredients || "Galleta hecha de masa de galleta"; }
 
-      detailSheet.classList.add('open');
-      detailSheet.setAttribute('aria-hidden','false');
+      detailSheet?.classList.add('open');
+      detailSheet?.setAttribute('aria-hidden','false');
       lockScroll();
     }
     function closeDetail(){
-      detailSheet.classList.remove('open');
-      detailSheet.setAttribute('aria-hidden','true');
+      detailSheet?.classList.remove('open');
+      detailSheet?.setAttribute('aria-hidden','true');
       currentProductId = null;
       unlockScroll();
       renderCart();
@@ -686,32 +695,44 @@
       closeDetail();
     }
 
-    closeDetailBtn.addEventListener('click', closeDetail);
-    closeDetailOverlay.addEventListener('click', closeDetail);
-    detailAddBtn.addEventListener('click', addCurrentToCart);
+    on(closeDetailBtn,'click', closeDetail);
+    on(closeDetailOverlay,'click', closeDetail);
+    on(detailAddBtn,'click', addCurrentToCart);
 
-    document.querySelector('#btnWhatsApp').addEventListener('click', goWhatsApp);
-    document.addEventListener('input', (e)=>{
-      if(e.target.id==='customerName'){
-        e.target.classList.remove('input-error');
-        const errEl = document.querySelector('#nameError');
+    // Guardado + limpieza de error
+    on($('#btnWhatsApp'),'click', goWhatsApp);
+    on(document,'input', (e)=>{
+      const t=e.target;
+      if(!(t instanceof HTMLElement)) return;
+      if(t.id==='customerName'){
+        t.classList.remove('input-error');
+        const errEl = $('#nameError');
         if(errEl) errEl.style.display='none';
       }
-      if(e.target.id==='customerName'||e.target.id==='notes') saveCart();
+      if(t.id==='customerName'||t.id==='notes') saveCart();
     });
-    document.addEventListener('change', (e)=>{ if(e.target.name==='delivery') saveCart(); });
+    on(document,'change', (e)=>{
+      const t=e.target;
+      if(!(t instanceof HTMLElement)) return;
+      if(t.getAttribute('name')==='delivery') saveCart();
+    });
 
-    // Splash lifecycle
-    const splash = document.getElementById('splash');
-    const splashLogo = document.getElementById('splashLogo');
-    if(splash && splashLogo){
+    // Splash lifecycle (más robusto)
+    const splash = $('#splash');
+    const splashLogo = $('#splashLogo');
+    if(splash){
       lockScroll();
-      const endSplash = ()=>{ splash.style.display='none'; unlockScroll(); };
-      splashLogo.addEventListener('animationend', endSplash, {once:true});
+      const endSplash = ()=>{
+        splash.remove(); // elimina del DOM para que nunca tape
+        unlockScroll();
+      };
+      if(splashLogo){
+        on(splashLogo,'animationend', endSplash, {once:true});
+      }
       setTimeout(endSplash, 2500);
     }
 
-    // Render inicial
+    // Render inicial (antes de cualquier otra cosa por seguridad)
     renderCatalog();
     renderCart();
 
