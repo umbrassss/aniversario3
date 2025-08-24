@@ -178,7 +178,7 @@
         background:rgba(15,23,42,.9);
         border:1px solid rgba(255,255,255,.12);
         box-shadow:var(--shadow);
-        z-index:3; /* por encima de los fades */
+        z-index:3;
         cursor:pointer;
       }
       .rail-arrow svg{ width:18px; height:18px; stroke:var(--text); }
@@ -300,6 +300,9 @@
     const CURRENCY = "USD";
     const STORE_WHATSAPP = "593997339248";
 
+    // 🚫 IDs ocultos (fácil de volver a mostrar quitándolos del Set)
+    const HIDDEN_IDS = new Set(["roll-08","roll-12"]); // Roll Brownie, Cookie Pot
+
     const CATALOG = [
       { id:"roll-01", name:"Nutella Classic", price:1.00, color:"#3b82f6", ingredients:"Galleta de vainilla con chispas de chocolate y relleno de Nutella", options:null, img:"assets/img/roll-01-nutella-classic.jpg" },
       { id:"roll-02", name:"Cookies n’ cream", price:1.00, color:"#475569", ingredients:"Galleta de vainilla con trozos de galleta oreo y relleno de Nutella", options:null, img:"assets/img/roll-02-cookies-n-cream.jpg" },
@@ -381,6 +384,10 @@
     }
 
     function renderRail(root, title, ids){
+      // 🔎 Filtra elementos ocultos
+      const visibleIds = ids.filter(id => !HIDDEN_IDS.has(id));
+      if(visibleIds.length === 0) return; // si no hay, no renderiza la sección
+
       const section = document.createElement('div');
       section.className = "rail-section";
       section.innerHTML = `
@@ -397,7 +404,7 @@
       const leftBtn = section.querySelector('.rail-arrow--left');
       const rightBtn = section.querySelector('.rail-arrow--right');
 
-      ids.forEach(id=>{
+      visibleIds.forEach(id=>{
         const prod = CATALOG.find(p=>p.id===id);
         if(!prod) return;
         const img=prod.img||svgPlaceholder(prod.name, prod.color);
@@ -416,7 +423,7 @@
 
       setupRailActiveState(rail);
 
-      if(ids.length === 1){
+      if(visibleIds.length === 1){
         rail.classList.add('rail--single');
         wrap.classList.add('single');
       }else{
@@ -435,7 +442,6 @@
         updateRailArrows(rail, wrap, leftBtn, rightBtn);
       });
 
-      // Desplazamiento por flechas (cálculo por click para ser a prueba de responsive)
       const stepBy = (dir)=>{
         const card = rail.querySelector('.product');
         const gap = parseFloat(getComputedStyle(rail).columnGap) || 12;
@@ -455,7 +461,6 @@
         rightBtn.style.display = 'none';
         return;
       }
-      // Asegura visibles en desktop (CSS oculta en móvil)
       leftBtn.style.display = '';
       rightBtn.style.display = '';
 
@@ -649,7 +654,7 @@
     const detailImg=document.querySelector('#detailImg');
     const detailName=document.querySelector('#detailName');
     const detailPrice=document.querySelector('#detailPrice');
-    const detailIngredients=document.querySelector('#detailIngredients');
+    const detailIngredients=document.querySelector('#detailIngredients']);
 
     function openDetail(productId){
       const prod = CATALOG.find(p=>p.id===productId);
